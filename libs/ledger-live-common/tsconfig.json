@@ -23,5 +23,6 @@
   "files": [
     // by whitelisting the files to include, TS won't automatically
     "package.json" // include all source below root, which is the default.
-  ]
+  ],
+  "exclude": []
 }
