@@ -5,32 +5,32 @@ import { log } from "@ledgerhq/logs";
 import { CryptoCurrency } from "@ledgerhq/types-cryptoassets";
 import { Account } from "@ledgerhq/types-live";
 import BigNumber from "bignumber.js";
-import { ethers, FetchRequest, JsonRpcProvider } from "ethers";
+import { ethers, JsonRpcProvider } from "ethers";
 import ERC20Abi from "../../abis/erc20.abi.json";
 import OptimismGasPriceOracleAbi from "../../abis/optimismGasPriceOracle.abi.json";
 import ScrollGasPriceOracleAbi from "../../abis/scrollGasPriceOracle.abi.json";
 import { ExternalNodeConfig } from "../../config";
 import { GasEstimationError, InsufficientFunds, UnsupportedRpcMethodError } from "../../errors";
-import { FeeHistory, FeeData, Transaction as EvmTransaction } from "../../types";
-import { isSmartContractInput, safeEncodeEIP55, normalizeAddress } from "../../utils";
-import { withRetries } from "../withRetries";
+import { Transaction as EvmTransaction, FeeData, FeeHistory } from "../../types";
+import { isSmartContractInput, normalizeAddress, safeEncodeEIP55 } from "../../utils";
+import { RetryPolicy, withApi } from "../withApi";
 import { gethCallTracerToTraceBlockItems } from "./gethCallTracerToTraceBlockItems";
 import {
   hasErrorCode,
-  isUnsupportedRpcMethodErrorMsg,
   isUnsupportedRpcMethodError,
+  isUnsupportedRpcMethodErrorMsg,
 } from "./rpc.errors";
 import {
-  NodeApi,
-  ERC20Transfer,
-  PrefetchedBlockTransaction,
-  LogWithAddress,
-  TransactionReceipt,
-  TraceBlockItem,
-  isTraceBlockItem,
-  TransactionInfo,
   BlockByHeightResult,
   BlockReceiptInfo,
+  ERC20Transfer,
+  isTraceBlockItem,
+  LogWithAddress,
+  NodeApi,
+  PrefetchedBlockTransaction,
+  TraceBlockItem,
+  TransactionInfo,
+  TransactionReceipt,
 } from "./types";
 
 /**
@@ -101,7 +101,7 @@ function makeErc20Transfer(log: LogWithAddress, from: string, to: string): ERC20
  * - topic[1]: src address (indexed, padded to 32 bytes)
  * - data: wad (uint256, 32 bytes)
  * - log.address: token contract address
- * 
+ *
  *  Other standards (not supported yet):
  * - ERC721:  4 topics (sig, from, to, tokenId) - filtered out by topics.length === 3
  * - ERC1155: different event signature - filtered out by topic[0] check
@@ -110,73 +110,18 @@ function makeErc20Transfer(log: LogWithAddress, from: string, to: string): ERC20
  * @returns Array of parsed ERC20 transfers
  */
 export function parseERC20TransfersFromLogs(logs: ReadonlyArray<LogWithAddress>): ERC20Transfer[] {
-  return logs
-    .flatMap(log => {
-      if (isTransfer(log)) {
-        return [makeErc20Transfer(log, topicToAddress(log.topics[1]), topicToAddress(log.topics[2]))];
-      }
-      if (isWethDeposit(log)) {
-        return [makeErc20Transfer(log, ZERO_ADDRESS_HEX, topicToAddress(log.topics[1]))];
-      }
-      if (isWethWithdrawal(log)) {
-        return [makeErc20Transfer(log, topicToAddress(log.topics[1]), ZERO_ADDRESS_HEX)];
-      }
-      return [];
-    });
-}
-
-export const RPC_TIMEOUT =
-  process.env.NODE_ENV === "test"
-    ? 100
-    : /* istanbul ignore next: prod values don't change the behaviour of the test */ 5000; // wait 5 sec after a fail
-export const DEFAULT_RETRIES_RPC_METHODS =
-  process.env.NODE_ENV === "test"
-    ? 1
-    : /* istanbul ignore next: prod values don't change the behaviour of the test */ 3;
-
-/**
- * Cache for RPC providers to avoid recreating the connection on every usage of `withApi`
- * Without this, ethers will create a new provider and use the `eth_chainId` RPC call
- * at instanciation which could result in rate limits being reached
- * on some specific nodes (E.g. the main Optimism RPC)
- * Keyed by currency id + RPC URI so the same chain with different uri gets distinct providers.
- */
-const PROVIDERS_BY_RPC: Record<string, JsonRpcProvider> = {};
-
-function providerCacheKey(currencyId: string, uri: string): string {
-  return `${currencyId}:${uri}`;
-}
-
-/**
- * Connects to RPC Node
- *
- * ⚠️ Make sure to always use a `StaticJsonRpcProvider` and not a `JsonRpcProvider`
- * because the latter will use a `eth_chainId` before every request in order
- * to check if the node used changed (as per EIP-1193 standard)
- * @see https://github.com/ethers-io/ethers.js/issues/901
- */
-export async function withApi<T>(
-  currency: CryptoCurrency,
-  execute: (api: JsonRpcProvider) => Promise<T>,
-  nodeConfig: ExternalNodeConfig,
-): Promise<T> {
-  const retries = nodeConfig.retries ?? DEFAULT_RETRIES_RPC_METHODS;
-  return withRetries(
-    async () => {
-      const key = providerCacheKey(currency.id, nodeConfig.uri);
-      if (!PROVIDERS_BY_RPC[key]) {
-        const chainId = currency.ethereumLikeInfo?.chainId;
-        const fetchReq = new FetchRequest(nodeConfig.uri);
-        // Disable ethers' built-in HTTP-level retries: withRetries handles all retry logic.
-        fetchReq.setThrottleParams({ maxAttempts: 1 });
-        PROVIDERS_BY_RPC[key] = new JsonRpcProvider(fetchReq, chainId);
-      }
-      const provider = PROVIDERS_BY_RPC[key];
-      return await execute(provider);
-    },
-    retries,
-    RPC_TIMEOUT,
-  );
+  return logs.flatMap(log => {
+    if (isTransfer(log)) {
+      return [makeErc20Transfer(log, topicToAddress(log.topics[1]), topicToAddress(log.topics[2]))];
+    }
+    if (isWethDeposit(log)) {
+      return [makeErc20Transfer(log, ZERO_ADDRESS_HEX, topicToAddress(log.topics[1]))];
+    }
+    if (isWethWithdrawal(log)) {
+      return [makeErc20Transfer(log, topicToAddress(log.topics[1]), ZERO_ADDRESS_HEX)];
+    }
+    return [];
+  });
 }
 
 async function getTransaction(
@@ -805,11 +750,12 @@ function make<F extends (currency: CryptoCurrency, ...args: any[]) => any>(
   f: (api: JsonRpcProvider, ...args: Parameters<F>) => ReturnType<F>,
   nodeConfig: ExternalNodeConfig,
   configOverride: Partial<ExternalNodeConfig> = {},
+  retryPolicy: RetryPolicy = "app-retries",
 ): F {
   const mergedConfig = { ...nodeConfig, ...configOverride };
   return ((...args: Parameters<F>) => {
     const [currency] = args;
-    return withApi(currency, api => f(api, ...args), mergedConfig);
+    return withApi(currency, api => f(api, ...args), mergedConfig, retryPolicy);
   }) as F;
 }
 
@@ -817,7 +763,7 @@ export function createNodeApi(config: ExternalNodeConfig): NodeApi {
   return {
     getBlockByHeight: make(getBlockByHeight, config),
     getCoinBalance: make(getCoinBalance, config),
-    getTokenBalance: make(getTokenBalance, config),
+    getTokenBalance: make(getTokenBalance, config, {}, "ethers-http-only"),
     getTokenAllowance: make(getTokenAllowance, config),
     getTransactionCount: make(getTransactionCount, config),
     getTransaction: make(getTransaction, config),
