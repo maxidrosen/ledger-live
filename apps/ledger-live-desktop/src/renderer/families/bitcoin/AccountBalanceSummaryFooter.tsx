@@ -295,7 +295,7 @@ const AccountBalanceSummaryFooter = ({ account }: Props) => {
     }
   };
 
-  const startShieldedSync = (account: ZcashAccount) => {
+  const startShieldedSync = (zcashAccount: ZcashAccount) => {
     saveSyncState({
       syncState: "running",
       progress: 0,
@@ -306,21 +306,21 @@ const AccountBalanceSummaryFooter = ({ account }: Props) => {
       syncType: SYNC_TYPE_SHIELDED,
     };
 
-    const shieldedSync = getAccountBridge(account)
-      .sync(account, syncConfig)
+    const shieldedSync = getAccountBridge(zcashAccount)
+      .sync(zcashAccount, syncConfig)
       .subscribe({
         next(accountUpdater) {
-          dispatch(updateAccountWithUpdater(account.id, accountUpdater));
+          dispatch(updateAccountWithUpdater(zcashAccount.id, accountUpdater));
         },
         error(err) {
           console.error(err);
         },
         complete() {
-          console.log(`Zcash shielded sync completed on account ${account.id}`);
+          console.log(`Zcash shielded sync completed on account ${zcashAccount.id}`);
         },
       });
 
-    dispatch(upsertShieldedSubscription({ accountId: account.id, subscription: shieldedSync }));
+    dispatch(upsertShieldedSubscription({ accountId: zcashAccount.id, subscription: shieldedSync }));
   };
 
   const stopShieldedSync = () => {
