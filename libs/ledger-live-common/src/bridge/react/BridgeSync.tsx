@@ -93,7 +93,9 @@ function useHydrate({ accounts, hydrateCurrency }) {
 
       if (!hydrated[currency.id]) {
         hydrated[currency.id] = true;
-        hydrateCurrency(currency);
+        hydrateCurrency(currency).catch(e => {
+          console.warn(`[BridgeSync] failed to hydrate currency ${currency.id}`, e);
+        });
       }
     }
   }, [accounts, hydrateCurrency]);
