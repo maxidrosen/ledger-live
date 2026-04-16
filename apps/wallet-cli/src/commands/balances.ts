@@ -1,4 +1,4 @@
-import { defineCommand } from "@bunli/core";
+import { defineCommand } from "../shared/command";
 import { WalletAdapter } from "../wallet";
 import { parseAccountDescriptor, resolveAccountArg } from "../wallet/models";
 import { networkStringFromCurrencyId } from "../shared/accountDescriptor";
