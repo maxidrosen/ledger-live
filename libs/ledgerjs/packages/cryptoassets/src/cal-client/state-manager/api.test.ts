@@ -159,6 +159,23 @@ describe("api.ts", () => {
       expect(params.contract_address).toBe("0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48");
       expect(params.network).toBe("ethereum");
     });
+
+    it("should accept optional token_identifier in TokenByAddressInCurrencyParams", () => {
+      const params: import("./api").TokenByAddressInCurrencyParams = {
+        contract_address: "EGLD-123",
+        network: "elrond",
+        token_identifier: "MYTOKEN-abc123",
+      };
+      expect(params.token_identifier).toBe("MYTOKEN-abc123");
+    });
+
+    it("should allow TokenByAddressInCurrencyParams without token_identifier", () => {
+      const params: import("./api").TokenByAddressInCurrencyParams = {
+        contract_address: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+        network: "ethereum",
+      };
+      expect(params.token_identifier).toBeUndefined();
+    });
   });
 
   describe("baseQuery configuration", () => {
