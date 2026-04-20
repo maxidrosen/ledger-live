@@ -4,9 +4,7 @@ import type { Tool } from "../types";
 
 export const useDevToolsNavigation = (tools: Tool[]) => {
   const [activeTool, setActiveTool] = useState<Tool | null>(null);
-  const [expandedCategories, setExpandedCategories] = useState<Set<Category>>(
-    new Set(),
-  );
+  const [expandedCategories, setExpandedCategories] = useState<Set<Category>>(new Set());
 
   const toggleCategory = (category: Category) => {
     setExpandedCategories(prev => {

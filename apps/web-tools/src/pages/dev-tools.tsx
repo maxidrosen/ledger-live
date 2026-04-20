@@ -1,5 +1,9 @@
 import { DevTools } from "@devtools/shell";
 
 export default function DevToolsPage() {
-  return <DevTools />;
+  return (
+    <div style={{ height: "100vh" }}>
+      <DevTools />
+    </div>
+  );
 }

@@ -10,16 +10,12 @@ describe("DevTools (web)", () => {
 
   it("shows categories that have tools in the sidebar", () => {
     render(<DevTools />);
-    expect(
-      screen.getByRole("button", { name: "Dev Tools" }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Dev Tools" })).toBeInTheDocument();
   });
 
   it("collapses all categories by default", () => {
     render(<DevTools />);
-    expect(
-      screen.queryByRole("button", { name: "Feature Flags" }),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Feature Flags" })).not.toBeInTheDocument();
   });
 
   it("shows empty state when no tool is selected", () => {
@@ -30,9 +26,7 @@ describe("DevTools (web)", () => {
   it("expands a category when clicked", () => {
     render(<DevTools />);
     fireEvent.click(screen.getByRole("button", { name: "Dev Tools" }));
-    expect(
-      screen.getByRole("button", { name: "Feature Flags" }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Feature Flags" })).toBeInTheDocument();
   });
 
   it("collapses an expanded category on second click", () => {
@@ -40,9 +34,7 @@ describe("DevTools (web)", () => {
     const categoryButton = screen.getByRole("button", { name: "Dev Tools" });
     fireEvent.click(categoryButton);
     fireEvent.click(categoryButton);
-    expect(
-      screen.queryByRole("button", { name: "Feature Flags" }),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Feature Flags" })).not.toBeInTheDocument();
   });
 
   it("navigates to a tool after expanding its category", () => {
@@ -50,8 +42,6 @@ describe("DevTools (web)", () => {
     fireEvent.click(screen.getByRole("button", { name: "Dev Tools" }));
     fireEvent.click(screen.getByRole("button", { name: "Feature Flags" }));
     expect(screen.queryByTestId("devtools-empty")).not.toBeInTheDocument();
-    expect(screen.getByTestId("devtools-content")).toHaveTextContent(
-      "Feature Flags",
-    );
+    expect(screen.getByTestId("devtools-content")).toHaveTextContent("Feature Flags");
   });
 });

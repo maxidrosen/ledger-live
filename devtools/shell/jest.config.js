@@ -16,5 +16,6 @@ module.exports = {
       },
     ],
   },
-setupFilesAfterEnv: ["<rootDir>/jest.setup.ts"],
+  testPathIgnorePatterns: ["\\.native\\.test\\."],
+  setupFilesAfterEnv: ["<rootDir>/jest.setup.ts"],
 };

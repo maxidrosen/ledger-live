@@ -7,17 +7,29 @@
   "types": "src/index.ts",
   "sideEffects": false,
   "scripts": {
+    "format": "prettier --write 'src/**/*.{ts,tsx}'",
     "typecheck": "tsc --noEmit",
-    "test": "jest",
+    "test": "pnpm run test:web && pnpm run test:native",
+    "test:native": "jest --config jest.native.config.js",
+    "test:web": "jest --config jest.config.js",
     "test:watch": "jest --watch"
   },
   "peerDependencies": {
+    "@ledgerhq/native-ui": "workspace:^",
     "@ledgerhq/react-ui": "workspace:^",
-    "react": ">=19"
+    "react": ">=19",
+    "react-native": "*"
   },
   "devDependencies": {
+    "@ledgerhq/native-ui": "workspace:^",
     "@ledgerhq/react-ui": "workspace:^",
+    "@babel/plugin-transform-export-namespace-from": "7.27.1",
     "@jest/globals": "catalog:",
+    "@react-native/babel-preset": "catalog:",
+    "babel-jest": "catalog:",
+    "@testing-library/react-native": "catalog:",
+    "react-native": "catalog:",
+    "react-test-renderer": "catalog:",
     "@swc/core": "catalog:",
     "@swc/jest": "catalog:",
     "@testing-library/dom": "catalog:",
