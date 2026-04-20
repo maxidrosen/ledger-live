@@ -12,9 +12,11 @@
     "test:watch": "jest --watch"
   },
   "peerDependencies": {
+    "@ledgerhq/react-ui": "workspace:^",
     "react": ">=19"
   },
   "devDependencies": {
+    "@ledgerhq/react-ui": "workspace:^",
     "@jest/globals": "catalog:",
     "@swc/core": "catalog:",
     "@swc/jest": "catalog:",
