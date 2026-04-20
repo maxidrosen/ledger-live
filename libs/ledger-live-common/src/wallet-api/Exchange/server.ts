@@ -62,6 +62,7 @@ import { handleErrors } from "./handleSwapErrors";
 import get from "lodash/get";
 import { SwapError } from "./SwapError";
 import { getQuotes } from "./quotes";
+import { fetchSpotPrices } from "./quotes/service/fetchSpotPrices";
 
 export { ExchangeType };
 
@@ -732,14 +733,20 @@ export const handlers = ({
         if (!params) {
           throw new ServerError(createUnknownError({ message: "params is undefined" }));
         }
-        // TODO(unrealistic-quote-fetch): populate `spotPrices` from
-        // `LEDGER_COUNTERVALUES_API` before calling `getQuotes` so the
-        // wallet-side `unrealisticQuote` warning is actually emitted in
-        // production. Tracked as a follow-up to the
-        // `wallet_unrealistic_warning_pr` migration step; wallet-side
-        // emission is already unit- and parity-tested with injected
-        // fixtures.
-        return getQuotes(params, { accounts, spotPrices: {} });
+        // Fetch spot prices for the three currency ids that matter for
+        // the `unrealisticQuote` warning (send + receive + optional
+        // network-fee currency) against the caller-provided counter
+        // value. `fetchSpotPrices` never throws: on any failure it
+        // returns `{}` and the warning check short-circuits.
+        const spotPrices = await fetchSpotPrices({
+          currencyIds: [
+            params.data.sendCurrencyId,
+            params.data.receiveCurrencyId,
+            params.data.networkFeesCurrencyId,
+          ],
+          counterValue: params.data.counterValueCurrency || "usd",
+        });
+        return getQuotes(params, { accounts, spotPrices });
       },
     ),
   }) as const satisfies Handlers;

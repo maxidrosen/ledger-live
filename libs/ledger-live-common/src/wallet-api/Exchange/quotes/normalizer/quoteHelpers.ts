@@ -17,14 +17,17 @@ export function isUniswapXQuote(quote: RawQuote): boolean {
   return Boolean(quote.customFields?.["@type"]?.includes("UniswapDutchCustomFields"));
 }
 
-// TODO: align with `computeLiquiditySource`. This reads the raw API field
-// directly, which can disagree with the derived classification for providers
-// like `oneinchfusion` or UniswapX rows where the raw `liquiditySource` is
-// missing/unreliable. Kept as-is for byte-for-byte parity with the legacy
-// `useGetQuotes` hook; fix in a dedicated follow-up so `gasLess` and the
-// exposed `liquiditySource` agree by construction.
+/**
+ * `gasLess` is derived from the same classification that feeds
+ * `Quote.quoteDetails.liquiditySource`, not from the raw API
+ * `liquiditySource` field. The API omits that field for several RFQ
+ * providers (notably `oneinchfusion` and UniswapX-tagged rows), which
+ * would otherwise make every such row look like an AMM quote and incur
+ * fake gas costs. Mirrors the legacy `useGetQuotes` hook's post-fetch
+ * `liquiditySource = getQuoteType(quote)` rewrite.
+ */
 export function isGasLess(quote: RawQuote): boolean {
-  return quote.liquiditySource === "RFQ";
+  return computeLiquiditySource(quote) === "RFQ";
 }
 
 /**

@@ -280,6 +280,15 @@ export type QuoteEstimatedNetworkFee = {
   currencyId: string;
 };
 
+/**
+ * Wallet-computed extra network fee attributable to a token-approval transaction
+ * that must precede the swap (EVM only, when `tokenAllowance.isApproved === false`).
+ * Shaped identically to {@link QuoteEstimatedNetworkFee}; kept as its own field so
+ * consumers can display a split breakdown ("Network: X, Token approval: Y") and/or
+ * sum the two for a total cost. Absent when no approval is required.
+ */
+export type QuoteApprovalNetworkFee = QuoteEstimatedNetworkFee;
+
 export type QuoteDetails = {
   type: TradeMethod;
   sendAmount: number;
@@ -299,6 +308,7 @@ export type QuoteDetails = {
   tags?: QuoteTags;
   permitData?: QuotePermitData;
   estimatedNetworkFee?: QuoteEstimatedNetworkFee;
+  approvalNetworkFee?: QuoteApprovalNetworkFee;
 };
 
 export type Quote = {

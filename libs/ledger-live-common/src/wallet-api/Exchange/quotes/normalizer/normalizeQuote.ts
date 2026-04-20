@@ -4,6 +4,7 @@ import type { ProviderData } from "../lookupProviderConfig";
 import { buildProviderDetails } from "./buildProviderDetails";
 import { buildQuoteDetails } from "./buildQuoteDetails";
 import { computeError, computeWarning } from "./computeQuoteStatus";
+import type { FeeEstimate } from "./networkFeeEstimate";
 import { isGasLess, normalizedProviderId, resolveQuoteId } from "./quoteHelpers";
 import type { UnrealisticQuoteInput } from "./unrealisticQuote";
 
@@ -28,11 +29,19 @@ const EMPTY_UNREALISTIC_INPUT: UnrealisticQuoteInput = {
  * prices). Optional so unit tests that do not exercise the warning path
  * don't have to thread fixtures through; production callers via
  * `getQuotes` always supply a concrete input.
+ *
+ * `feeEstimate` carries the wallet-side default-strategy network-fee
+ * estimate produced by {@link computeFeeEstimate}. Optional: when absent
+ * (unit tests, callers without a bridge) the emitted quote has undefined
+ * `estimatedNetworkFee` / `approvalNetworkFee` and no
+ * `notEnoughBalanceForFees` error, matching the pre-fee-plumbing
+ * baseline.
  */
 export function normalizeQuote(
   rawQuote: RawQuote,
   providerData: ProviderData,
   input: UnrealisticQuoteInput = EMPTY_UNREALISTIC_INPUT,
+  feeEstimate?: FeeEstimate,
 ): Quote {
   const provider = normalizedProviderId(rawQuote.provider);
   const gasLess = isGasLess(rawQuote);
@@ -42,8 +51,8 @@ export function normalizeQuote(
     key: rawQuote.key ?? `${provider}-${rawQuote.type}`,
     provider,
     providerDetails: buildProviderDetails(rawQuote, providerData),
-    quoteDetails: buildQuoteDetails(rawQuote, gasLess),
+    quoteDetails: buildQuoteDetails(rawQuote, gasLess, feeEstimate),
     warning: computeWarning(rawQuote, input),
-    error: computeError(rawQuote),
+    error: computeError(rawQuote, feeEstimate),
   };
 }
