@@ -143,16 +143,15 @@ export type ProviderTypes = "DEX" | "CEX";
 
 /**
  * Non-fatal signals attached to a quote. Consumers decide whether to surface,
- * hide, or filter based on the `code` discriminant.
+ * hide, or filter based on the `code` discriminant. Declared as a discriminated
+ * union with a single member for now so new variants can be added additively
+ * without reshaping call sites.
  *
- * - `highSpread`: quote's exchange rate is suspiciously high.
  * - `unrealisticQuote`: expected fiat output exceeds fiat input by `gainPercent`.
  *   Consumers that can reach a countervalues source use this to hide or badge
  *   the row.
  */
-export type QuoteWarning =
-  | { code: "highSpread" }
-  | { code: "unrealisticQuote"; gainPercent: number };
+export type QuoteWarning = { code: "unrealisticQuote"; gainPercent: number };
 
 export type QuoteError = "notEnoughBalanceForFees";
 

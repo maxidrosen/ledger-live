@@ -732,7 +732,14 @@ export const handlers = ({
         if (!params) {
           throw new ServerError(createUnknownError({ message: "params is undefined" }));
         }
-        return getQuotes(params);
+        // TODO(unrealistic-quote-fetch): populate `spotPrices` from
+        // `LEDGER_COUNTERVALUES_API` before calling `getQuotes` so the
+        // wallet-side `unrealisticQuote` warning is actually emitted in
+        // production. Tracked as a follow-up to the
+        // `wallet_unrealistic_warning_pr` migration step; wallet-side
+        // emission is already unit- and parity-tested with injected
+        // fixtures.
+        return getQuotes(params, { accounts, spotPrices: {} });
       },
     ),
   }) as const satisfies Handlers;
