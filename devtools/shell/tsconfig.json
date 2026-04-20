@@ -1,10 +1,19 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
+    "lib": ["ES2024", "DOM"],
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
     "jsx": "react-jsx",
     "noEmit": true,
+<<<<<<< HEAD:devtools/shell/tsconfig.json
     "module": "ESNext",
     "moduleResolution": "bundler"
+=======
+    "types": ["jest"]
+>>>>>>> 10b870c2f5 (feat: add devtool ui):devtools/core/tsconfig.json
   },
-  "include": ["src"]
+  "include": ["src/**/*", "jest.setup.ts"],
+  "exclude": ["node_modules"]
 }
