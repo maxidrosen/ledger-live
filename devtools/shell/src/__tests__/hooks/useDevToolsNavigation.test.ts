@@ -2,6 +2,8 @@ import { act, renderHook } from "@testing-library/react";
 import { useDevToolsNavigation } from "../../hooks/useDevToolsNavigation";
 import { Category, type Tool } from "../../types";
 
+const noopComponent = () => null;
+
 const tools: Tool[] = [
   { id: "feature-flags", label: "Feature Flags", category: Category.CONFIGURATION },
   { id: "another-tool", label: "Another Tool", category: Category.CONFIGURATION },

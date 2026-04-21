@@ -1,6 +1,9 @@
 import { Category } from "./types";
 import type { Tool } from "./types";
 
+const FeatureFlagsPlaceholder = () => null;
+const ComponentPlaceholder = () => null;
+
 export const TOOLS: Tool[] = [
   {
     id: "feature-flags",

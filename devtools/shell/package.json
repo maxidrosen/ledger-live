@@ -14,6 +14,9 @@
     "test:web": "jest --config jest.config.js",
     "test:watch": "jest --watch"
   },
+  "dependencies": {
+    "@shared/feature-flags": "workspace:^"
+  },
   "peerDependencies": {
     "@ledgerhq/lumen-design-core": "catalog:",
     "@ledgerhq/lumen-ui-react": "catalog:",
