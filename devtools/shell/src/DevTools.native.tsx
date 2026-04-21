@@ -1,12 +1,12 @@
 import { StyleProvider, Flex, Text, Button } from "@ledgerhq/native-ui";
 import { ScrollView } from "react-native";
-import { Category } from "./types";
 import { TOOLS } from "./tools.config";
-import { useDevToolsNavigation } from "./hooks";
+import { Category } from "./types";
+import { useAccordion, useDevToolsNavigation } from "./hooks";
 
 export const DevTools = () => {
-  const { activeTool, setActiveTool, expandedCategories, toggleCategory } =
-    useDevToolsNavigation(TOOLS);
+  const { activeTool, setActiveTool, categories } = useDevToolsNavigation(TOOLS);
+  const { isExpanded, toggle } = useAccordion<Category>();
 
   return (
     <StyleProvider selectedPalette="dark">
@@ -33,39 +33,38 @@ export const DevTools = () => {
           </Text>
           <ScrollView>
             <Flex flexDirection="column" py={1} px={2}>
-              {Object.values(Category).map(category => {
-                const toolsInCategory = TOOLS.filter(t => t.category === category);
-                const isExpanded = expandedCategories.has(category);
+              {categories.map(({ category, tools }) => {
+                const expanded = isExpanded(category);
                 return (
                   <Flex key={category} flexDirection="column">
                     <Button
                       type="shade"
                       size="small"
                       accessibilityLabel={category}
-                      onPress={() => toggleCategory(category)}
+                      onPress={() => toggle(category)}
                     >
-                      {(isExpanded ? "▾ " : "▸ ") + category}
+                      {(expanded ? "▾ " : "▸ ") + category}
                     </Button>
-                    {isExpanded && toolsInCategory.length > 0 && (
-                      <Flex flexDirection="column" px={2}>
-                        {toolsInCategory.map(tool => (
-                          <Button
-                            key={tool.label}
-                            type={activeTool === tool ? "main" : "shade"}
-                            size="small"
-                            accessibilityLabel={tool.label}
-                            onPress={() => setActiveTool(tool)}
-                          >
-                            {tool.label}
-                          </Button>
-                        ))}
-                      </Flex>
-                    )}
-                    {isExpanded && toolsInCategory.length === 0 && (
-                      <Text variant="tiny" color="neutral.c50" px={3} py={1}>
-                        No tools available
-                      </Text>
-                    )}
+                    {expanded &&
+                      (tools.length > 0 ? (
+                        <Flex flexDirection="column" px={2}>
+                          {tools.map(tool => (
+                            <Button
+                              key={tool.label}
+                              type={activeTool === tool ? "main" : "shade"}
+                              size="small"
+                              accessibilityLabel={tool.label}
+                              onPress={() => setActiveTool(tool)}
+                            >
+                              {tool.label}
+                            </Button>
+                          ))}
+                        </Flex>
+                      ) : (
+                        <Text variant="tiny" color="neutral.c50" px={3} py={1}>
+                          No tools available
+                        </Text>
+                      ))}
                   </Flex>
                 );
               })}

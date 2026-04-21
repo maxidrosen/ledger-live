@@ -1,11 +1,11 @@
 import { StyleProvider, Flex, Text, Button } from "@ledgerhq/react-ui";
-import { Category } from "./types";
 import { TOOLS } from "./tools.config";
-import { useDevToolsNavigation } from "./hooks";
+import { Category } from "./types";
+import { useAccordion, useDevToolsNavigation } from "./hooks";
 
 export const DevTools = () => {
-  const { activeTool, setActiveTool, expandedCategories, toggleCategory } =
-    useDevToolsNavigation(TOOLS);
+  const { activeTool, setActiveTool, categories } = useDevToolsNavigation(TOOLS);
+  const { isExpanded, toggle } = useAccordion<Category>();
 
   return (
     <StyleProvider selectedPalette="dark">
@@ -38,9 +38,8 @@ export const DevTools = () => {
             py={1}
             style={{ listStyle: "none", margin: 0, padding: "0 8px", gap: "1%" }}
           >
-            {Object.values(Category).map(category => {
-              const toolsInCategory = TOOLS.filter(t => t.category === category);
-              const isExpanded = expandedCategories.has(category);
+            {categories.map(({ category, tools }) => {
+              const expanded = isExpanded(category);
               return (
                 <Flex as="li" key={category} flexDirection="column">
                   <Button
@@ -48,39 +47,40 @@ export const DevTools = () => {
                     size="xs"
                     width="100%"
                     aria-label={category}
-                    aria-expanded={isExpanded}
-                    onClick={() => toggleCategory(category)}
+                    aria-expanded={expanded}
+                    onClick={() => toggle(category)}
                   >
-                    <span aria-hidden="true">{isExpanded ? "▾" : "▸"}</span>
+                    <span aria-hidden="true">{expanded ? "▾" : "▸"}</span>
                     {category}
                   </Button>
-                  {isExpanded && toolsInCategory.length > 0 && (
-                    <Flex
-                      as="ul"
-                      flexDirection="column"
-                      style={{ listStyle: "none", margin: 0, padding: "0 8px" }}
-                    >
-                      {toolsInCategory.map(tool => (
-                        <Flex as="li" key={tool.label}>
-                          <Button
-                            variant={activeTool === tool ? "main" : "shade"}
-                            size="xs"
-                            width="100%"
-                            aria-current={activeTool === tool ? "page" : undefined}
-                            onClick={() => setActiveTool(tool)}
-                            backgroundColor={activeTool !== tool ? "background.main" : undefined}
-                          >
-                            {tool.label}
-                          </Button>
-                        </Flex>
-                      ))}
-                    </Flex>
-                  )}
-                  {isExpanded && toolsInCategory.length === 0 && (
-                    <Text variant="extraSmall" color="neutral.c50" px={3} py={1}>
-                      No tools available
-                    </Text>
-                  )}
+                  {expanded &&
+                    (tools.length > 0 ? (
+                      <Flex
+                        as="ul"
+                        flexDirection="column"
+                        style={{ listStyle: "none", margin: 0, padding: "0 8px" }}
+                      >
+                        {tools.map(tool => (
+                          <Flex as="li" key={tool.label}>
+                            <Button
+                              // Works because tool is currently static, it is not supposed to change
+                              variant={activeTool === tool ? "main" : "shade"}
+                              size="xs"
+                              width="100%"
+                              aria-current={activeTool === tool ? "page" : undefined}
+                              onClick={() => setActiveTool(tool)}
+                              backgroundColor={activeTool !== tool ? "background.main" : undefined}
+                            >
+                              {tool.label}
+                            </Button>
+                          </Flex>
+                        ))}
+                      </Flex>
+                    ) : (
+                      <Text variant="extraSmall" color="neutral.c50" px={3} py={1}>
+                        No tools available
+                      </Text>
+                    ))}
                 </Flex>
               );
             })}

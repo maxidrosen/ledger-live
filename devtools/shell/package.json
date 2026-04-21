@@ -7,7 +7,7 @@
   "types": "src/index.ts",
   "sideEffects": false,
   "scripts": {
-    "format": "prettier --write 'src/**/*.{ts,tsx}'",
+    "format": "prettier --write 'src/**/*.{ts,tsx}' 'jest/**/*.{ts,tsx}'",
     "typecheck": "tsc --noEmit",
     "test": "pnpm run test:web && pnpm run test:native",
     "test:native": "jest --config jest.native.config.js",
