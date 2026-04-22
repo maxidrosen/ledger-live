@@ -122,7 +122,6 @@ export type QuotesInput = {
   receiveAddress: string;
   sendCurrencyId: string;
   receiveCurrencyId: string;
-  counterValueCurrency: string;
   networkFeesCurrencyId?: string;
   slippage?: number;
   uniswapOrderType?: UniswapOrderType;
@@ -311,6 +310,60 @@ export type QuoteDetails = {
   approvalNetworkFee?: QuoteApprovalNetworkFee;
 };
 
+/**
+ * Three representations of a single formatted number, given to consumers
+ * as a triplet so they can pick the one that fits their layout without
+ * re-implementing locale / decimal logic.
+ *
+ * - `numberValue`: bare locale-formatted number, no prefix / suffix text
+ *   (e.g. `"4,500"`, `"0.5"`). For approximate values — currently only
+ *   float-quote `receiveAmount` — the leading `~` marker is baked into
+ *   every variant so the "approximate" hint survives all display paths.
+ * - `withPrefix`: `numberValue` with the field's natural prefix attached.
+ *   Equal to `numberValue` when the field has no prefix (e.g. bare crypto
+ *   amounts). Prefixes are: fiat symbol for countervalues, `"1 <send> = "`
+ *   for the rate, nothing for slippage.
+ * - `withSuffix`: `numberValue` with the field's natural suffix attached,
+ *   separated by a non-breaking space for crypto tickers and by nothing
+ *   for the slippage `%`. Equal to `numberValue` when there is no suffix.
+ */
+export type FormattedNumber = {
+  numberValue: string;
+  withPrefix: string;
+  withSuffix: string;
+};
+
+/**
+ * Ready-to-render formatted values for a single quote. Attached when the
+ * wallet has enough context (locale, counter-value fiat, resolved currency
+ * metadata) to format on its side; `undefined` otherwise so consumers can
+ * fall back to their own formatting pipeline.
+ *
+ * Each field is a {@link FormattedNumber} triplet — consumers pick the
+ * variant their UI needs (bare number, number + prefix, number + suffix).
+ *
+ * Parity with swap-live-app's legacy flat-string `FormattedQuoteValues`:
+ * - `sendAmount` / `receiveAmount` / `networkFee`: crypto value, suffix = ticker.
+ *   `receiveAmount.numberValue` carries a `~` prefix for float quotes.
+ * - `*Countervalue`: fiat value, prefix = counter-value symbol. Every
+ *   variant is `""` when the spot price is missing (except
+ *   `networkFeeCountervalue`, which falls back to the `networkFee`
+ *   triplet).
+ * - `rate`: rate value, prefix = `"1 <send> = "` (omitted when the send
+ *   ticker is unknown), suffix = receive ticker.
+ * - `slippage`: normalized percent, suffix = `"%"` (no NBSP separator).
+ */
+export type FormattedQuoteValues = {
+  sendAmount: FormattedNumber;
+  sendAmountCountervalue: FormattedNumber;
+  receiveAmount: FormattedNumber;
+  receiveAmountCountervalue: FormattedNumber;
+  networkFee: FormattedNumber;
+  networkFeeCountervalue: FormattedNumber;
+  rate: FormattedNumber;
+  slippage: FormattedNumber;
+};
+
 export type Quote = {
   id?: string;
   key: string;
@@ -319,6 +372,12 @@ export type Quote = {
   quoteDetails: QuoteDetails;
   warning: QuoteWarning | null;
   error: QuoteError | null;
+  /**
+   * Optional wallet-formatted display strings. Additive field:
+   * producers that cannot format (no locale / counter-value fiat context)
+   * omit it, and consumers must handle `undefined`.
+   */
+  formatted?: FormattedQuoteValues;
 };
 
 /** Error rows returned next to quotes (swap API error objects). */

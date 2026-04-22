@@ -1,6 +1,8 @@
+import type { FormatContext } from "../format/types";
 import type { RawQuote } from "../service/types";
 import type { Quote } from "../types";
 import type { ProviderData } from "../lookupProviderConfig";
+import { buildFormattedQuoteValues } from "./buildFormattedQuoteValues";
 import { buildProviderDetails } from "./buildProviderDetails";
 import { buildQuoteDetails } from "./buildQuoteDetails";
 import { computeError, computeWarning } from "./computeQuoteStatus";
@@ -21,38 +23,51 @@ const EMPTY_UNREALISTIC_INPUT: UnrealisticQuoteInput = {
 };
 
 /**
- * Enrich one raw HTTP quote row using the full swap `providerData` catalog (CAL + CDN).
+ * Enrich one raw HTTP quote row using the full swap `providerData`
+ * catalog (CAL + CDN).
  *
- * `input` carries the auxiliary context needed to decide status-flavored
- * fields that depend on more than the raw quote itself (currently only
- * `unrealisticQuote` warning emission, which needs the pair's spot
- * prices). Optional so unit tests that do not exercise the warning path
- * don't have to thread fixtures through; production callers via
- * `getQuotes` always supply a concrete input.
- *
- * `feeEstimate` carries the wallet-side default-strategy network-fee
- * estimate produced by {@link computeFeeEstimate}. Optional: when absent
- * (unit tests, callers without a bridge) the emitted quote has undefined
- * `estimatedNetworkFee` / `approvalNetworkFee` and no
- * `notEnoughBalanceForFees` error, matching the pre-fee-plumbing
- * baseline.
+ * @param rawQuote - Raw row emitted by the aggregator HTTP response.
+ * @param providerData - Merged CAL + CDN catalog used to stamp provider
+ *   display metadata.
+ * @param input - Auxiliary context for status-flavored fields (currently
+ *   only `unrealisticQuote` warning emission, which needs spot prices).
+ *   Defaults to {@link EMPTY_UNREALISTIC_INPUT} so unit tests that don't
+ *   exercise the warning path can omit it.
+ * @param feeEstimate - Wallet-side default-strategy fee estimate from
+ *   {@link computeFeeEstimate}. When absent, `estimatedNetworkFee` /
+ *   `approvalNetworkFee` stay undefined and `notEnoughBalanceForFees` is
+ *   not emitted.
+ * @param formatContext - Locale / counter-value fiat / resolved currency
+ *   metadata needed to produce `Quote.formatted`. When absent, the
+ *   returned quote omits `formatted` and consumers fall back to their
+ *   own formatting pipeline.
+ * @returns The wire-shaped {@link Quote} (including optional `formatted`
+ *   when `formatContext` was supplied).
  */
 export function normalizeQuote(
   rawQuote: RawQuote,
   providerData: ProviderData,
   input: UnrealisticQuoteInput = EMPTY_UNREALISTIC_INPUT,
   feeEstimate?: FeeEstimate,
+  formatContext?: FormatContext,
 ): Quote {
   const provider = normalizedProviderId(rawQuote.provider);
   const gasLess = isGasLess(rawQuote);
+  const quoteDetails = buildQuoteDetails(rawQuote, gasLess, feeEstimate);
 
-  return {
+  const quote: Quote = {
     id: resolveQuoteId(rawQuote),
     key: rawQuote.key ?? `${provider}-${rawQuote.type}`,
     provider,
     providerDetails: buildProviderDetails(rawQuote, providerData),
-    quoteDetails: buildQuoteDetails(rawQuote, gasLess, feeEstimate),
+    quoteDetails,
     warning: computeWarning(rawQuote, input),
     error: computeError(rawQuote, feeEstimate),
   };
+
+  if (formatContext) {
+    quote.formatted = buildFormattedQuoteValues(quoteDetails, feeEstimate, formatContext);
+  }
+
+  return quote;
 }

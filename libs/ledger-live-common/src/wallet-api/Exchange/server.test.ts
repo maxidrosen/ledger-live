@@ -80,6 +80,8 @@ describe("handlers", () => {
         accounts,
         tracking: mockTracking,
         manifest: testAppManifest,
+        locale: "en-US",
+        counterValueCurrency: "USD",
         uiHooks: mockUiHooks,
       });
 
@@ -119,6 +121,8 @@ describe("handlers", () => {
         accounts,
         tracking: mockTracking,
         manifest: testAppManifest,
+        locale: "en-US",
+        counterValueCurrency: "USD",
         uiHooks: mockUiHooks,
       });
 
@@ -152,6 +156,8 @@ describe("handlers", () => {
         accounts,
         tracking: mockTracking,
         manifest: testAppManifest,
+        locale: "en-US",
+        counterValueCurrency: "USD",
         uiHooks: mockUiHooks,
       });
 

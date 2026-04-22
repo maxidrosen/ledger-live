@@ -1,3 +1,4 @@
+import type { FormatContext } from "../format/types";
 import type { ProviderData } from "../lookupProviderConfig";
 import type { RawQuote } from "../service/types";
 import { normalizeQuote } from "./normalizeQuote";
@@ -509,6 +510,132 @@ describe("normalizeQuote", () => {
         amount: "1500000000000000",
         currencyId: "ethereum",
       });
+    });
+  });
+
+  describe("quote.formatted — wallet-side display strings", () => {
+    const NBSP = "\u00A0";
+
+    const formatContext: FormatContext = {
+      locale: "en",
+      fiat: { ticker: "USD", symbol: "$", magnitude: 2 },
+      spotPrices: {
+        ethereum: 3000,
+        "ethereum/erc20/usd__coin": 1,
+      },
+      sendCurrency: { id: "ethereum", decimals: 18, ticker: "ETH" },
+      receiveCurrency: {
+        id: "ethereum/erc20/usd__coin",
+        decimals: 6,
+        ticker: "USDC",
+      },
+      networkFeesCurrency: { id: "ethereum", decimals: 18, ticker: "ETH" },
+    };
+
+    it("leaves `formatted` undefined when no formatContext is supplied (legacy callers)", () => {
+      const quote = normalizeQuote(
+        makeRawQuote({ amountFrom: 1.5, amountTo: 4500, exchangeRate: 3000 }),
+        emptyProviderData,
+      );
+      expect(quote.formatted).toBeUndefined();
+    });
+
+    it("attaches a complete FormattedQuoteValues object when formatContext is supplied", () => {
+      const quote = normalizeQuote(
+        makeRawQuote({
+          amountFrom: 1.5,
+          amountTo: 4500,
+          exchangeRate: 3000,
+          slippage: 0,
+          type: "float",
+        }),
+        emptyProviderData,
+        {
+          sendCurrencyId: "ethereum",
+          receiveCurrencyId: "ethereum/erc20/usd__coin",
+          spotPrices: formatContext.spotPrices,
+        },
+        {
+          // 0.0005 ETH at 18 decimals = 5e14 wei
+          estimatedNetworkFee: { amount: "500000000000000", currencyId: "ethereum" },
+          approvalNetworkFee: undefined,
+          notEnoughBalance: false,
+        },
+        formatContext,
+      );
+
+      expect(quote.formatted).toEqual({
+        sendAmount: {
+          numberValue: "1.5",
+          withPrefix: `ETH${NBSP}1.5`,
+          withSuffix: `1.5${NBSP}ETH`,
+        },
+        sendAmountCountervalue: {
+          numberValue: "4,500",
+          withPrefix: "$4,500",
+          withSuffix: `4,500${NBSP}$`,
+        },
+        receiveAmount: {
+          numberValue: "4,500",
+          withPrefix: `USDC${NBSP}4,500`,
+          withSuffix: `4,500${NBSP}USDC`,
+        },
+        receiveAmountCountervalue: {
+          numberValue: "4,500",
+          withPrefix: "$4,500",
+          withSuffix: `4,500${NBSP}$`,
+        },
+        networkFee: {
+          numberValue: "0.0005",
+          withPrefix: `ETH${NBSP}0.0005`,
+          withSuffix: `0.0005${NBSP}ETH`,
+        },
+        networkFeeCountervalue: {
+          numberValue: "1.5",
+          withPrefix: "$1.5",
+          withSuffix: `1.5${NBSP}$`,
+        },
+        rate: {
+          numberValue: `1 ETH = 3,000${NBSP}USDC`,
+          withPrefix: `1 ETH = 3,000${NBSP}USDC`,
+          withSuffix: `1 ETH = 3,000${NBSP}USDC`,
+        },
+        slippage: {
+          numberValue: "0",
+          withPrefix: "0",
+          withSuffix: "0%",
+        },
+      });
+    });
+
+    it("renders `0 <feeTicker>` for the network fee when the fee estimate is undefined (gasless / no bridge)", () => {
+      const quote = normalizeQuote(
+        makeRawQuote({ amountFrom: 1, amountTo: 3000, exchangeRate: 3000, type: "fixed" }),
+        emptyProviderData,
+        undefined,
+        undefined,
+        formatContext,
+      );
+      expect(quote.formatted?.networkFee.withSuffix).toBe(`0${NBSP}ETH`);
+      expect(quote.formatted?.networkFee.numberValue).toBe("0");
+    });
+
+    it("excludes the approval fee from formatted.networkFee (only estimatedNetworkFee counts)", () => {
+      // estimated = 0.0003 ETH, approval = 0.0002 ETH; swap-parity: only
+      // the base swap-gas amount flows into the `networkFee` display string.
+      const quote = normalizeQuote(
+        makeRawQuote(),
+        emptyProviderData,
+        undefined,
+        {
+          estimatedNetworkFee: { amount: "300000000000000", currencyId: "ethereum" },
+          approvalNetworkFee: { amount: "200000000000000", currencyId: "ethereum" },
+          notEnoughBalance: false,
+        },
+        formatContext,
+      );
+      expect(quote.formatted?.networkFee.withSuffix).toBe(`0.0003${NBSP}ETH`);
+      expect(quote.formatted?.networkFee.numberValue).toBe("0.0003");
     });
   });
 });
