@@ -174,7 +174,7 @@ const LedgerStoreProvider: React.FC<Props> = ({ onInitFinished, children, store 
           settingsData["overriddenFeatureFlags"] !== null
             ? (settingsData["overriddenFeatureFlags"] as Record<string, unknown>)
             : undefined;
-        const filteredOverrides: Parameters<typeof setAllOverrides>[0] = rawOverrides
+        const filteredOverrides = rawOverrides
           ? Object.fromEntries(Object.entries(rawOverrides).filter(([, v]) => v !== undefined))
           : {};
         const hasLegacyOverrides = Object.keys(filteredOverrides).length > 0;
