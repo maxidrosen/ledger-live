@@ -5,9 +5,24 @@ import { Category, type Tool } from "../../types";
 const noopComponent = () => null;
 
 const tools: Tool[] = [
-  { id: "feature-flags", label: "Feature Flags", category: Category.CONFIGURATION },
-  { id: "another-tool", label: "Another Tool", category: Category.CONFIGURATION },
-  { id: "network-inspector", label: "Network Inspector", category: Category.CONNECTIVITY },
+  {
+    id: "feature-flags",
+    label: "Feature Flags",
+    category: Category.CONFIGURATION,
+    component: noopComponent,
+  },
+  {
+    id: "another-tool",
+    label: "Another Tool",
+    category: Category.CONFIGURATION,
+    component: noopComponent,
+  },
+  {
+    id: "network-inspector",
+    label: "Network Inspector",
+    category: Category.CONNECTIVITY,
+    component: noopComponent,
+  },
 ];
 
 describe("useDevToolsNavigation", () => {

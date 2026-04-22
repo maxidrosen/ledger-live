@@ -2656,6 +2656,10 @@ importers:
         version: 4.1.18
 
   devtools/shell:
+    dependencies:
+      '@shared/feature-flags':
+        specifier: workspace:^
+        version: link:../../shared/feature-flags
     devDependencies:
       '@babel/plugin-transform-export-namespace-from':
         specifier: 7.27.1
