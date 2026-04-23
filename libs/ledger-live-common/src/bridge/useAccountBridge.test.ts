@@ -16,6 +16,17 @@ const suspenseWrapper = ({ children }: { children: React.ReactNode }) =>
   React.createElement(React.Suspense, { fallback: null }, children);
 
 describe("useAccountBridge", () => {
+  test("returns bridge synchronously without a Suspense boundary", () => {
+    const account = genAccount("mocked-account-sync", { currency: BTC });
+
+    // No suspenseWrapper — if useAccountBridge suspended it would throw here
+    const { result } = renderHook(() => useAccountBridge(account));
+
+    expect(typeof result.current.createTransaction).toBe("function");
+    expect(typeof result.current.updateTransaction).toBe("function");
+    expect(typeof result.current.prepareTransaction).toBe("function");
+  });
+
   test("returns a bridge with createTransaction for a BTC account", async () => {
     const account = genAccount("mocked-account-1", { currency: BTC });
 
