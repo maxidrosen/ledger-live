@@ -228,6 +228,19 @@ export default function SendSelectRecipient({ route }: Props) {
     currency,
   ]);
 
+  const [stuckAccountAndOperation, setStuckAccountAndOperation] = useState<Awaited<
+    ReturnType<typeof getStuckAccountAndOperation>
+  >>(undefined);
+  useEffect(() => {
+    let cancelled = false;
+    getStuckAccountAndOperation(account, mainAccount).then(result => {
+      if (!cancelled) setStuckAccountAndOperation(result);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [account, mainAccount]);
+
   if (!account || !transaction) return null;
 
   const error = withoutHiddenError(status.errors.recipient);
@@ -258,7 +271,6 @@ export default function SendSelectRecipient({ route }: Props) {
     !!status.errors.transaction ||
     !!status.errors.sender;
 
-  const stuckAccountAndOperation = getStuckAccountAndOperation(account, mainAccount);
   const extensions = getTokenExtensions(account);
 
   return (
