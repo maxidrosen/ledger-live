@@ -109,7 +109,7 @@ const handlers: ReducerMap<AccountsState, Payload> = {
   }),
 
   [AccountsActionTypes.CLEAN_CACHE]: (state: AccountsState) => ({
-    active: state.active.map(clearAccount),
+    active: state.active.map(a => clearAccount(a)),
   }),
 
   [AccountsActionTypes.DANGEROUSLY_OVERRIDE_STATE]: (
