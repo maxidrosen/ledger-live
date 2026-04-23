@@ -38,6 +38,7 @@ import { FearAndGreedDialog } from "./dialog/fearGreed.dialog";
 import { NewSendModal } from "./modal/new.send.modal";
 import { PrivateBalanceModal } from "./modal/private.balance.modal";
 import { MainNavigationPage } from "./mainNavigation.page";
+import { MarketCoinPage } from "./marketCoin.page";
 
 export class Application extends PageHolder {
   public account = new AccountPage(this.page);
@@ -79,4 +80,5 @@ export class Application extends PageHolder {
   public fearAndGreedDialog = new FearAndGreedDialog(this.page);
   public mainNavigation = new MainNavigationPage(this.page);
   public assets = new AssetsPage(this.page);
+  public marketCoin = new MarketCoinPage(this.page);
 }
