@@ -17,14 +17,13 @@ import type {
 } from "@ledgerhq/types-cryptoassets";
 import isEqual from "lodash/isEqual";
 import {
-  isAccountEmpty,
   flattenAccounts,
   getAccountCurrency,
   isUpToDateAccount,
-  clearAccount,
   makeEmptyTokenAccount,
   isAccountBalanceUnconfirmed,
 } from "@ledgerhq/live-common/account/index";
+import { clearAccount, isAccountEmpty } from "@ledgerhq/ledger-wallet-framework/account";
 
 import type { AccountsState, State } from "./types";
 import type {
@@ -110,7 +109,7 @@ const handlers: ReducerMap<AccountsState, Payload> = {
   }),
 
   [AccountsActionTypes.CLEAN_CACHE]: (state: AccountsState) => ({
-    active: state.active.map(clearAccount),
+    active: state.active.map(a => clearAccount(a)),
   }),
 
   [AccountsActionTypes.DANGEROUSLY_OVERRIDE_STATE]: (

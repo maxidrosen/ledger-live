@@ -1,4 +1,4 @@
-import { isAccountEmpty } from "@ledgerhq/live-common/account/index";
+import { isAccountEmpty } from "@ledgerhq/ledger-wallet-framework/account";
 import { useDelegation } from "@ledgerhq/live-common/families/tezos/react";
 import { useCallback } from "react";
 import { useDispatch } from "LLD/hooks/redux";

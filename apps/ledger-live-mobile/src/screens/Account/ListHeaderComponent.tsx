@@ -1,6 +1,6 @@
 import React, { ReactNode, useMemo } from "react";
 import { LayoutChangeEvent } from "react-native";
-import { isAccountEmpty, getMainAccount } from "@ledgerhq/live-common/account/index";
+import { isAccountEmpty, getMainAccount } from "@ledgerhq/ledger-wallet-framework/account";
 import {
   AccountLike,
   Account,

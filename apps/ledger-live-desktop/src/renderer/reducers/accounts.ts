@@ -3,11 +3,10 @@ import { handleActions } from "redux-actions";
 import { Account, AccountUserData, AccountLike } from "@ledgerhq/types-live";
 import {
   flattenAccounts,
-  clearAccount,
   getAccountCurrency,
   isUpToDateAccount,
-  isAccountEmpty,
 } from "@ledgerhq/live-common/account/index";
+import { clearAccount, isAccountEmpty } from "@ledgerhq/ledger-wallet-framework/account";
 
 import isEqual from "lodash/isEqual";
 import { State } from ".";
@@ -51,7 +50,7 @@ const handlers: AccountsHandlers = {
       return updater(existingAccount);
     }),
   REMOVE_ACCOUNT: (state, { payload: account }) => state.filter(acc => acc.id !== account.id),
-  CLEAN_ACCOUNTS_CACHE: state => state.map(clearAccount),
+  CLEAN_ACCOUNTS_CACHE: state => state.map(a => clearAccount(a)),
   REPLACE_ACCOUNTS: (state, { payload }) => payload,
 };
 

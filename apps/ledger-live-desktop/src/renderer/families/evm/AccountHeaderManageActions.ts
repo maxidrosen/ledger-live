@@ -1,7 +1,7 @@
 import { Account, AccountLike } from "@ledgerhq/types-live";
 import { useCallback } from "react";
 import { openModal } from "~/renderer/actions/modals";
-import { isAccountEmpty } from "@ledgerhq/live-common/account/index";
+import { isAccountEmpty } from "@ledgerhq/ledger-wallet-framework/account";
 import { useGetStakeLabelLocaleBased } from "~/renderer/hooks/useGetStakeLabelLocaleBased";
 import { useNavigate } from "react-router";
 import { useStake } from "LLD/hooks/useStake";

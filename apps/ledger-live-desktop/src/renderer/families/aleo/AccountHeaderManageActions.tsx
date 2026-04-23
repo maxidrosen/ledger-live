@@ -1,6 +1,6 @@
 import { useDispatch } from "LLD/hooks/redux";
 import { useTranslation } from "react-i18next";
-import { isAccountEmpty } from "@ledgerhq/live-common/account/index";
+import { isAccountEmpty } from "@ledgerhq/ledger-wallet-framework/account";
 import { openModal } from "~/renderer/actions/modals";
 import IconTransfer from "~/renderer/icons/Transfer";
 import type { AleoFamily } from "./types";

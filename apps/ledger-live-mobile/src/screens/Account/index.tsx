@@ -10,7 +10,7 @@ import SafeAreaView from "~/components/SafeAreaView";
 import { useTranslation } from "~/context/Locale";
 import { getCurrencyColor } from "@ledgerhq/live-common/currencies/index";
 import { useTheme } from "styled-components/native";
-import { getMainAccount, isAccountEmpty } from "@ledgerhq/live-common/account/helpers";
+import { getMainAccount, isAccountEmpty } from "@ledgerhq/ledger-wallet-framework/account";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { switchCountervalueFirst } from "~/actions/settings";
 import { useBalanceHistoryWithCountervalue } from "~/hooks/portfolio";

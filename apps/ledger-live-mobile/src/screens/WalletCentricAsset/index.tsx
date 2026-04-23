@@ -8,7 +8,7 @@ import Animated, {
 import { useTranslation } from "~/context/Locale";
 import { Box, Flex } from "@ledgerhq/native-ui";
 import { getCurrencyColor, isCryptoCurrency } from "@ledgerhq/live-common/currencies/index";
-import { isAccountEmpty } from "@ledgerhq/live-common/account/helpers";
+import { isAccountEmpty } from "@ledgerhq/ledger-wallet-framework/account";
 import { useTheme } from "styled-components/native";
 import { useAssetsData } from "@ledgerhq/live-common/dada-client/hooks/useAssetsData";
 import VersionNumber from "react-native-version-number";

@@ -32,10 +32,12 @@ export const coinModuleLoaders: CoinModuleLoader[] = [
     loadPlatformAdapter: () => require("../families/bitcoin/platformAdapter").default,
     loadAccount: () => require("@ledgerhq/coin-bitcoin/account").default,
     loadMockBridge: () => require("../families/bitcoin/bridge/mock").default,
-    loadClearAccount: () => require("../families/bitcoin/clearAccount").clearAccount,
+    loadClearAccount: () =>
+      Promise.resolve(require("../families/bitcoin/clearAccount").clearAccount),
     loadIsEditableOperation: () => require("../families/bitcoin/operations").isEditableOperation,
     loadIsStuckOperation: () => require("../families/bitcoin/operations").isStuckOperation,
-    loadGetStuckAccountAndOperation: () => require("../families/bitcoin/operations").getStuckAccountAndOperation,
+    loadGetStuckAccountAndOperation: () =>
+      require("../families/bitcoin/operations").getStuckAccountAndOperation,
   },
   {
     family: "canton",
@@ -43,7 +45,7 @@ export const coinModuleLoaders: CoinModuleLoader[] = [
     loadTransaction: () => require("@ledgerhq/coin-canton/transaction").default,
     loadDeviceTxConfig: () => require("@ledgerhq/coin-canton/deviceTransactionConfig").default,
     loadMockBridge: () => require("../families/canton/bridge/mock").default,
-    loadIsAccountEmpty: () => require("@ledgerhq/coin-canton").isAccountEmpty,
+    loadIsAccountEmpty: () => Promise.resolve(require("@ledgerhq/coin-canton").isAccountEmpty),
   },
   {
     family: "cardano",
@@ -80,8 +82,10 @@ export const coinModuleLoaders: CoinModuleLoader[] = [
     loadWalletApiAdapter: () => require("../families/cosmos/walletApiAdapter").default,
     loadMockBridge: () => require("../families/cosmos/bridge/mock").default,
     loadMockAccount: () => require("@ledgerhq/coin-cosmos/mock").default,
-    loadIsAccountEmpty: () => require("@ledgerhq/coin-cosmos/helpers").isAccountEmpty,
-    loadGetVotesCount: () => require("../families/cosmos/getVotesCount").getVotesCount,
+    loadIsAccountEmpty: () =>
+      Promise.resolve(require("@ledgerhq/coin-cosmos/helpers").isAccountEmpty),
+    loadGetVotesCount: () =>
+      Promise.resolve(require("../families/cosmos/getVotesCount").getVotesCount),
   },
   {
     family: "evm",
@@ -95,7 +99,8 @@ export const coinModuleLoaders: CoinModuleLoader[] = [
     loadSigner: () => require("../bridge/generic-alpaca/families/evm/signer").default,
     loadIsEditableOperation: () => require("../families/evm/operations").isEditableOperation,
     loadIsStuckOperation: () => require("../families/evm/operations").isStuckOperation,
-    loadGetStuckAccountAndOperation: () => require("../families/evm/operations").getStuckAccountAndOperation,
+    loadGetStuckAccountAndOperation: () =>
+      require("../families/evm/operations").getStuckAccountAndOperation,
   },
   {
     family: "filecoin",
@@ -198,7 +203,8 @@ export const coinModuleLoaders: CoinModuleLoader[] = [
     loadTransaction: () => require("@ledgerhq/coin-tezos/transaction").default,
     loadDeviceTxConfig: () => require("@ledgerhq/coin-tezos/deviceTransactionConfig").default,
     loadMockBridge: () => require("../families/tezos/bridge/mock").default,
-    loadGetVotesCount: () => require("../families/tezos/getVotesCount").getVotesCount,
+    loadGetVotesCount: () =>
+      Promise.resolve(require("../families/tezos/getVotesCount").getVotesCount),
     loadValidateAddress: () =>
       require("@ledgerhq/coin-tezos/logic/validateAddress").validateAddress,
     loadSigner: () => require("../bridge/generic-alpaca/families/tezos/signer").default,
@@ -215,8 +221,9 @@ export const coinModuleLoaders: CoinModuleLoader[] = [
     loadTransaction: () => require("@ledgerhq/coin-tron/transaction").default,
     loadDeviceTxConfig: () => require("@ledgerhq/coin-tron/deviceTransactionConfig").default,
     loadMockBridge: () => require("../families/tron/bridge/mock").default,
-    loadIsAccountEmpty: () => require("@ledgerhq/coin-tron/index").isAccountEmpty,
-    loadGetVotesCount: () => require("../families/tron/getVotesCount").getVotesCount,
+    loadIsAccountEmpty: () => Promise.resolve(require("@ledgerhq/coin-tron/index").isAccountEmpty),
+    loadGetVotesCount: () =>
+      Promise.resolve(require("../families/tron/getVotesCount").getVotesCount),
   },
   {
     family: "vechain",
@@ -225,7 +232,7 @@ export const coinModuleLoaders: CoinModuleLoader[] = [
     // No loadDeviceTxConfig: vechain has no deviceTransactionConfig
     loadAccount: () => require("@ledgerhq/coin-vechain/account").default,
     loadMockAccount: () => require("@ledgerhq/coin-vechain/mock").default,
-    loadIsAccountEmpty: () => require("@ledgerhq/coin-vechain").isAccountEmpty,
+    loadIsAccountEmpty: () => Promise.resolve(require("@ledgerhq/coin-vechain").isAccountEmpty),
   },
   {
     family: "xrp",
