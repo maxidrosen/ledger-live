@@ -65,7 +65,7 @@ function StepNominationContent({
 }
 
 export default function StepNomination(props: StepProps) {
-  if (!props.transaction) return null;
+  if (!props.account || !props.transaction) return null;
   return <StepNominationContent {...props} transaction={props.transaction} />;
 }
 export function StepNominationFooter({
