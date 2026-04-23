@@ -2,7 +2,7 @@ import React from "react";
 import { SectionList, SectionListData, SectionListRenderItem } from "react-native";
 import { Flex } from "@ledgerhq/native-ui";
 import { Account, AccountLike, DailyOperationsSection, Operation } from "@ledgerhq/types-live";
-import { flattenAccounts, isAccountEmpty } from "@ledgerhq/live-common/account/helpers";
+import { flattenAccounts, isAccountEmpty } from "@ledgerhq/ledger-wallet-framework/account";
 
 import { Trans } from "~/context/Locale";
 

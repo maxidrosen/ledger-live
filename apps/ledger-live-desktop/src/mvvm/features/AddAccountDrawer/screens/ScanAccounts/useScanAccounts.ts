@@ -1,4 +1,4 @@
-import { isAccountEmpty } from "@ledgerhq/live-common/account/index";
+import { isAccountEmpty } from "@ledgerhq/ledger-wallet-framework/account";
 import { getCurrencyBridge } from "@ledgerhq/live-common/bridge/index";
 import { addAccountsAction } from "@ledgerhq/live-wallet/addAccounts";
 import { CryptoCurrency } from "@ledgerhq/types-cryptoassets";

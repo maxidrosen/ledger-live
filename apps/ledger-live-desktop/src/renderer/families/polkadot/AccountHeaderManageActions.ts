@@ -5,7 +5,8 @@ import {
   hasExternalStash,
   hasPendingOperationType,
 } from "@ledgerhq/live-common/families/polkadot/logic";
-import { getMainAccount, isAccountEmpty } from "@ledgerhq/live-common/account/index";
+import { getMainAccount } from "@ledgerhq/live-common/account/index";
+import { isAccountEmpty } from "@ledgerhq/ledger-wallet-framework/account";
 import IconCoins from "~/renderer/icons/Coins";
 import { PolkadotAccount } from "@ledgerhq/live-common/families/polkadot/types";
 import { useGetStakeLabelLocaleBased } from "~/renderer/hooks/useGetStakeLabelLocaleBased";

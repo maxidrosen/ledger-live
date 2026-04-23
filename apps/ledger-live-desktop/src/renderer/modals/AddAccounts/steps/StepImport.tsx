@@ -5,7 +5,7 @@ import { Trans } from "react-i18next";
 import { concat, from, Subscription } from "rxjs";
 import { ignoreElements, filter, map, retry } from "rxjs/operators";
 import { Account } from "@ledgerhq/types-live";
-import { isAccountEmpty } from "@ledgerhq/live-common/account/index";
+import { isAccountEmpty } from "@ledgerhq/ledger-wallet-framework/account";
 import { isCantonAccount } from "@ledgerhq/coin-canton/bridge/serialization";
 import { isConcordiumAccount } from "@ledgerhq/coin-concordium/bridge/serialization";
 import { openModal } from "~/renderer/actions/modals";

@@ -3,7 +3,7 @@ import { useEffect, useCallback, useState, useRef, useMemo } from "react";
 import { concat, from, Subscription } from "rxjs";
 import { ignoreElements } from "rxjs/operators";
 import { useDispatch } from "~/context/hooks";
-import { isAccountEmpty } from "@ledgerhq/live-common/account/index";
+import { isAccountEmpty } from "@ledgerhq/ledger-wallet-framework/account";
 import uniq from "lodash/uniq";
 import type { Account } from "@ledgerhq/types-live";
 import type { CryptoOrTokenCurrency } from "@ledgerhq/types-cryptoassets";

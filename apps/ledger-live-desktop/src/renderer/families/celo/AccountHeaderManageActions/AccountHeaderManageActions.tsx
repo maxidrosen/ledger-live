@@ -1,4 +1,4 @@
-import { isAccountEmpty } from "@ledgerhq/live-common/account/index";
+import { isAccountEmpty } from "@ledgerhq/ledger-wallet-framework/account";
 import { isAccountRegistrationPending } from "@ledgerhq/live-common/families/celo/logic";
 import { CeloAccount } from "@ledgerhq/live-common/families/celo/types";
 import React, { useCallback } from "react";

@@ -1,4 +1,4 @@
-import { isAccountEmpty } from "@ledgerhq/live-common/account/index";
+import { isAccountEmpty } from "@ledgerhq/ledger-wallet-framework/account";
 import { groupAddAccounts } from "@ledgerhq/live-wallet/addAccounts";
 import { Account, DerivationMode } from "@ledgerhq/types-live";
 

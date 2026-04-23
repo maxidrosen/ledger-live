@@ -3,11 +3,10 @@ import { handleActions } from "redux-actions";
 import { Account, AccountUserData, AccountLike } from "@ledgerhq/types-live";
 import {
   flattenAccounts,
-  clearAccount,
   getAccountCurrency,
   isUpToDateAccount,
-  isAccountEmpty,
 } from "@ledgerhq/live-common/account/index";
+import { clearAccount, isAccountEmpty } from "@ledgerhq/ledger-wallet-framework/account";
 
 import isEqual from "lodash/isEqual";
 import { State } from ".";
