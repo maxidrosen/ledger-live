@@ -475,6 +475,9 @@ patchedDependencies:
   '@exodus/patch-broken-hermes-typed-arrays':
     hash: 7deb6c5bd39ee007fca03da7609b2e0dee99dbb9962c3c8715edfd026da0a732
     path: patches/@exodus__patch-broken-hermes-typed-arrays.patch
+  '@ledgerhq/lumen-ui-rnative@0.1.25':
+    hash: 326f35f4a5eb8a542e8e39a65dbdc9cdfc725cb43d6df1384de364febb2053e5
+    path: patches/@ledgerhq__lumen-ui-rnative@0.1.25.patch
   '@taquito/http-utils':
     hash: fa57afa8cde2dca5953b33875e5797001987caeb346d5a479e7de0c4dd941cb3
     path: patches/@taquito__http-utils.patch
@@ -1660,7 +1663,7 @@ importers:
         version: 0.1.11
       '@ledgerhq/lumen-ui-rnative':
         specifier: 'catalog:'
-        version: 0.1.25(6928ad768ceefe1d192dbc262eba0ff3)
+        version: 0.1.25(patch_hash=326f35f4a5eb8a542e8e39a65dbdc9cdfc725cb43d6df1384de364febb2053e5)(6928ad768ceefe1d192dbc262eba0ff3)
       '@ledgerhq/native-ui':
         specifier: workspace:^
         version: link:../../libs/ui/packages/native
@@ -3104,7 +3107,7 @@ importers:
         version: 0.1.24(@ledgerhq/lumen-design-core@0.1.11)(clsx@2.1.1)(react-dom@19.1.4(react@19.1.4))(react-native@0.81.6(patch_hash=fbb22f6ab81c7336a446f504c4aef2f23fc558838854399c868c5590e29ac9f1)(@react-native-community/cli@15.1.0(typescript@6.0.2))(@types/react@19.0.14)(react@19.1.4))(react@19.1.4)(tailwind-merge@3.4.0)
       '@ledgerhq/lumen-ui-rnative':
         specifier: 'catalog:'
-        version: 0.1.25(aa020556a1592ba9f0483ff10ec347af)
+        version: 0.1.25(patch_hash=326f35f4a5eb8a542e8e39a65dbdc9cdfc725cb43d6df1384de364febb2053e5)(aa020556a1592ba9f0483ff10ec347af)
       '@swc/core':
         specifier: 'catalog:'
         version: 1.15.11
@@ -45947,7 +45950,7 @@ snapshots:
     transitivePeerDependencies:
       - react-native
 
-  '@ledgerhq/lumen-ui-rnative@0.1.25(6928ad768ceefe1d192dbc262eba0ff3)':
+  '@ledgerhq/lumen-ui-rnative@0.1.25(patch_hash=326f35f4a5eb8a542e8e39a65dbdc9cdfc725cb43d6df1384de364febb2053e5)(6928ad768ceefe1d192dbc262eba0ff3)':
     dependencies:
       '@gorhom/bottom-sheet': 5.2.6(84395b0893334b962db922150118e0bc)
       '@ledgerhq/lumen-design-core': 0.1.11
@@ -45966,7 +45969,7 @@ snapshots:
     transitivePeerDependencies:
       - react-dom
 
-  '@ledgerhq/lumen-ui-rnative@0.1.25(aa020556a1592ba9f0483ff10ec347af)':
+  '@ledgerhq/lumen-ui-rnative@0.1.25(patch_hash=326f35f4a5eb8a542e8e39a65dbdc9cdfc725cb43d6df1384de364febb2053e5)(aa020556a1592ba9f0483ff10ec347af)':
     dependencies:
       '@gorhom/bottom-sheet': 5.2.6(@types/react@19.0.14)(react-native-reanimated@4.3.0(react-native@0.81.6(patch_hash=fbb22f6ab81c7336a446f504c4aef2f23fc558838854399c868c5590e29ac9f1)(@react-native-community/cli@15.1.0(typescript@6.0.2))(@types/react@19.0.14)(react@19.1.4))(react@19.1.4))(react-native@0.81.6(patch_hash=fbb22f6ab81c7336a446f504c4aef2f23fc558838854399c868c5590e29ac9f1)(@react-native-community/cli@15.1.0(typescript@6.0.2))(@types/react@19.0.14)(react@19.1.4))(react@19.1.4)
       '@ledgerhq/lumen-design-core': 0.1.11
