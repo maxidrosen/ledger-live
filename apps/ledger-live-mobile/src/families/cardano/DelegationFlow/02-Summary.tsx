@@ -5,8 +5,9 @@ import React, { ReactNode, useCallback, useEffect, useMemo, useState } from "rea
 import { Trans, useTranslation } from "~/context/Locale";
 import { Animated, SafeAreaView, StyleSheet, View } from "react-native";
 import { getAccountCurrency } from "@ledgerhq/live-common/account/index";
-import { useAccountBridge } from "@ledgerhq/live-common/bridge/useAccountBridge";
+import { getAccountBridge } from "@ledgerhq/live-common/bridge/index";
 import useBridgeTransaction from "@ledgerhq/live-common/bridge/useBridgeTransaction";
+import { useAccountBridge } from "@ledgerhq/live-common/bridge/useAccountBridge";
 import { formatCurrencyUnit, getCurrencyColor } from "@ledgerhq/live-common/currencies/index";
 import {
   LEDGER_POOL_IDS,
@@ -19,6 +20,7 @@ import type {
   CardanoDelegation,
   TransactionStatus,
   Transaction,
+  Transaction as CardanoTransaction,
 } from "@ledgerhq/live-common/families/cardano/types";
 import { Box, Text, Icons } from "@ledgerhq/native-ui";
 import { AccountLike } from "@ledgerhq/types-live";
@@ -59,7 +61,7 @@ export default function DelegationSummary({ navigation, route }: Props) {
 
   const { cardanoResources } = account as CardanoAccount;
   const currentDelegation = cardanoResources.delegation;
-  const bridge = useAccountBridge<Transaction>(account, undefined);
+  const bridge = useAccountBridge<CardanoTransaction>(account, undefined);
 
   const [isFetchingPoolDetails, setIsFetchingPoolDetails] = useState(false);
   const [ledgerPools, setLedgerPools] = useState<Array<StakePool>>([]);
@@ -97,7 +99,7 @@ export default function DelegationSummary({ navigation, route }: Props) {
   tx = bridge.updateTransaction(tx, { mode: "delegate" });
 
   const { transaction, updateTransaction, setTransaction, status, bridgePending, bridgeError } =
-    useBridgeTransaction(() => {
+    useBridgeTransaction(bridge, () => {
       if (chosenPool) {
         tx = bridge.updateTransaction(tx, { poolId: chosenPool.poolId });
       }
@@ -116,8 +118,9 @@ export default function DelegationSummary({ navigation, route }: Props) {
   const onBridgeErrorRetry = useCallback(() => {
     setBridgeErr(null);
     if (!transaction) return;
+    const bridge = getAccountBridge(account, parentAccount);
     setTransaction(bridge.updateTransaction(transaction, {}));
-  }, [setTransaction, bridge, transaction]);
+  }, [setTransaction, account, parentAccount, transaction]);
 
   invariant(transaction, "transaction must be defined");
   invariant(transaction.family === "cardano", "transaction cardano");

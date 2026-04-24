@@ -2,7 +2,6 @@ import React, { useMemo, useEffect, useCallback } from "react";
 import { Image, View, Animated } from "react-native";
 import { useTheme } from "@react-navigation/native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { getAccountBridge } from "@ledgerhq/live-common/bridge/index";
 import {
   handleTransactionStatus,
   denominate,
@@ -12,6 +11,8 @@ import { getAccountCurrency, getMainAccount } from "@ledgerhq/ledger-wallet-fram
 import { Text, Icons } from "@ledgerhq/native-ui";
 import { Trans } from "~/context/Locale";
 import useBridgeTransaction from "@ledgerhq/live-common/bridge/useBridgeTransaction";
+import { useAccountBridge } from "@ledgerhq/live-common/bridge/useAccountBridge";
+import { Transaction as MultiversXTransaction } from "@ledgerhq/live-common/families/multiversx/types";
 import BigNumber from "bignumber.js";
 
 import { MULTIVERSX_LEDGER_VALIDATOR_ADDRESS } from "@ledgerhq/live-common/families/multiversx/constants";
@@ -45,9 +46,9 @@ const SetDelegation = (props: SetDelegationPropsType) => {
 
   const currency = getAccountCurrency(account);
   const color = getCurrencyColor(currency);
-  const bridge = getAccountBridge(account);
   const mainAccount = getMainAccount(account, undefined);
   const unit = useAccountUnit(account);
+  const bridge = useAccountBridge<MultiversXTransaction>(account);
 
   /*
    * Find the validator that'll be picked by default, which is the one from Ledger.
@@ -62,14 +63,16 @@ const SetDelegation = (props: SetDelegationPropsType) => {
    * Instantiate the transaction when opening the flow. Only gets runned once.
    */
 
-  const { transaction, updateTransaction, status, bridgeError } = useBridgeTransaction(() => ({
-    account,
-    transaction: bridge.updateTransaction(bridge.createTransaction(mainAccount), {
-      amount: new BigNumber(0),
-      recipient: defaultValidator ? defaultValidator.contract : "",
-      mode: "delegate",
-    }),
-  }));
+  const { transaction, updateTransaction, status, bridgeError } = useBridgeTransaction(bridge, () => {
+    return {
+      account,
+      transaction: bridge.updateTransaction(bridge.createTransaction(mainAccount), {
+        amount: new BigNumber(0),
+        recipient: defaultValidator ? defaultValidator.contract : "",
+        mode: "delegate",
+      }),
+    };
+  });
 
   /*
    * Use the transaction recipient to find the chosen validator and access more data about it..
@@ -184,7 +187,7 @@ const SetDelegation = (props: SetDelegationPropsType) => {
     const returnedTransaction = route.params.transaction;
 
     if (returnedTransaction) {
-      updateTransaction(() => returnedTransaction);
+      updateTransaction(() => returnedTransaction as MultiversXTransaction);
     }
   }, [route.params.transaction, updateTransaction]);
 

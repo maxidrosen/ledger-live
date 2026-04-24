@@ -1,8 +1,8 @@
 import { UserRefusedOnDevice } from "@ledgerhq/errors";
 import { addPendingOperation } from "@ledgerhq/live-common/account/index";
-import { getAccountBridge } from "@ledgerhq/live-common/bridge/index";
 import { SyncSkipUnderPriority } from "@ledgerhq/live-common/bridge/react/index";
 import useBridgeTransaction from "@ledgerhq/live-common/bridge/useBridgeTransaction";
+import { useAccountBridge } from "@ledgerhq/live-common/bridge/useAccountBridge";
 import React, { useCallback, useState } from "react";
 import { Trans, withTranslation } from "react-i18next";
 import { TFunction } from "i18next";
@@ -23,7 +23,7 @@ import StepConfirmation, { StepConfirmationFooter } from "./steps/StepConfirmati
 import StepValidatorGroup, { StepValidatorGroupFooter } from "./steps/StepValidatorGroup";
 import { defaultValidatorGroupAddress } from "@ledgerhq/live-common/families/celo/logic";
 import { CeloAccount, Transaction } from "@ledgerhq/live-common/families/celo/types";
-import { AccountBridge, Operation, Account, TokenAccount } from "@ledgerhq/types-live";
+import { Operation, Account, TokenAccount } from "@ledgerhq/types-live";
 import { St, StepProps, StepId } from "./types";
 import { Device } from "@ledgerhq/live-common/hw/actions/types";
 
@@ -86,6 +86,7 @@ const Body = ({ t, stepId, device, onClose, openModal, onChangeStepId, params }:
   const [signed, setSigned] = useState(false);
   const dispatch = useDispatch();
   const { account, source } = params;
+  const bridge = useAccountBridge<Transaction>(account, undefined);
   const {
     transaction,
     setTransaction,
@@ -94,8 +95,7 @@ const Body = ({ t, stepId, device, onClose, openModal, onChangeStepId, params }:
     status,
     bridgeError,
     bridgePending,
-  } = useBridgeTransaction(() => {
-    const bridge: AccountBridge<Transaction> = getAccountBridge(account, undefined);
+  } = useBridgeTransaction(bridge, () => {
     const transaction = bridge.updateTransaction(bridge.createTransaction(account), {
       mode: "vote",
       recipient: defaultValidatorGroupAddress(),

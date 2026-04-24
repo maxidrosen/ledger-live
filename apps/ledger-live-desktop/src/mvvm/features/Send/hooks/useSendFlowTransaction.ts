@@ -8,7 +8,7 @@ import type {
   SendFlowTransactionActions,
   RecipientData,
 } from "@ledgerhq/live-common/flows/send/types";
-import type { Account, AccountLike } from "@ledgerhq/types-live";
+import type { Account, AccountBridge, AccountLike } from "@ledgerhq/types-live";
 
 type UseSendFlowTransactionParams = Readonly<{
   account: AccountLike | null;
@@ -24,6 +24,13 @@ export function useSendFlowTransaction({
   account,
   parentAccount,
 }: UseSendFlowTransactionParams): UseSendFlowTransactionResult {
+  // Use getAccountBridge directly (synchronous) so we can handle the null account case.
+  // useAccountBridge cannot be called conditionally and requires a non-null AccountLike.
+  const bridge = useMemo<AccountBridge<Transaction> | null>(
+    () => (account ? (getAccountBridge(account, parentAccount) as AccountBridge<Transaction>) : null),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [account?.id, parentAccount?.id],
+  );
   const {
     transaction,
     setTransaction: bridgeSetTransaction,
@@ -32,7 +39,7 @@ export function useSendFlowTransaction({
     bridgeError,
     bridgePending,
     setAccount,
-  } = useBridgeTransaction(() => {
+  } = useBridgeTransaction(bridge, () => {
     if (!account) return {};
     return { account, parentAccount: parentAccount ?? undefined };
   });
