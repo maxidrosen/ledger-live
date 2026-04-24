@@ -16,6 +16,7 @@ import { isCryptoCurrency } from "@ledgerhq/live-common/currencies/helpers";
 import { getAccountCurrency } from "@ledgerhq/live-common/account/helpers";
 import { getAccountBridge } from "@ledgerhq/live-common/bridge/index";
 import useBridgeTransaction from "@ledgerhq/live-common/bridge/useBridgeTransaction";
+import { useAccountBridge } from "@ledgerhq/live-common/bridge/useAccountBridge";
 import { Account, AccountLike, Operation } from "@ledgerhq/types-live";
 import { Transaction } from "@ledgerhq/live-common/generated/types";
 import logger from "~/renderer/logger";
@@ -157,6 +158,7 @@ const Body = ({
     setMaybeRecipient(null);
   }, [setMaybeRecipient]);
 
+  const bridge = useAccountBridge(params?.account || accounts[0], params?.parentAccount);
   const {
     transaction,
     setTransaction,
@@ -168,7 +170,7 @@ const Body = ({
     status,
     bridgeError,
     bridgePending,
-  } = useBridgeTransaction(() => {
+  } = useBridgeTransaction(bridge, () => {
     const parentAccount = params?.parentAccount;
     const account = params?.account || accounts[0];
     return {

@@ -1,5 +1,6 @@
 import invariant from "invariant";
 import { BigNumber } from "bignumber.js";
+import { useAccountBridge } from "@ledgerhq/live-common/bridge/useAccountBridge";
 import useBridgeTransaction from "@ledgerhq/live-common/bridge/useBridgeTransaction";
 import React, { useCallback, useState, useEffect } from "react";
 import {
@@ -15,7 +16,7 @@ import { useTheme } from "@react-navigation/native";
 import type { Transaction as PolkadotTransaction } from "@ledgerhq/live-common/families/polkadot/types";
 import { useDebounce } from "@ledgerhq/live-common/hooks/useDebounce";
 import { getMainAccount } from "@ledgerhq/live-common/account/index";
-import { useAccountBridge } from "@ledgerhq/live-common/bridge/useAccountBridge";
+import { getAccountBridge } from "@ledgerhq/live-common/bridge/index";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { ScreenName } from "~/const";
 import { TrackScreen } from "~/analytics";
@@ -44,7 +45,7 @@ export default function PolkadotRebondAmount({ navigation, route }: NavigationPr
   const bridge = useAccountBridge<PolkadotTransaction>(account, parentAccount);
   const mainAccount = getMainAccount(account, parentAccount);
   const [maxSpendable, setMaxSpendable] = useState<BigNumber | null>(null);
-  const bridgeTransaction = useBridgeTransaction(() => {
+  const bridgeTransaction = useBridgeTransaction(bridge, () => {
     const t = bridge.createTransaction(mainAccount);
     const transaction = bridge.updateTransaction(t, {
       mode: "rebond",
@@ -60,7 +61,7 @@ export default function PolkadotRebondAmount({ navigation, route }: NavigationPr
   useEffect(() => {
     if (!account) return;
     let cancelled = false;
-    bridge
+    getAccountBridge(account, parentAccount)
       .estimateMaxSpendable({
         account,
         parentAccount,
@@ -74,7 +75,7 @@ export default function PolkadotRebondAmount({ navigation, route }: NavigationPr
     return () => {
       cancelled = true;
     };
-  }, [account, parentAccount, debouncedTransaction, bridge]);
+  }, [account, parentAccount, debouncedTransaction]);
   const onChange = useCallback(
     (amount: BigNumber) => {
       if (!amount.isNaN()) {
@@ -88,6 +89,7 @@ export default function PolkadotRebondAmount({ navigation, route }: NavigationPr
     [setTransaction, transaction, bridge],
   );
   const toggleUseAllAmount = useCallback(() => {
+    const bridge = getAccountBridge(account, parentAccount);
     if (!transaction) return;
     setTransaction(
       bridge.updateTransaction(transaction, {
@@ -95,7 +97,7 @@ export default function PolkadotRebondAmount({ navigation, route }: NavigationPr
         useAllAmount: !transaction.useAllAmount,
       }),
     );
-  }, [setTransaction, bridge, transaction]);
+  }, [setTransaction, account, parentAccount, transaction]);
   const onContinue = useCallback(() => {
     navigation.navigate(ScreenName.PolkadotRebondSelectDevice, {
       accountId: account.id,

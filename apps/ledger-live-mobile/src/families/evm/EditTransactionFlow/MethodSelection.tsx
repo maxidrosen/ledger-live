@@ -9,8 +9,9 @@ import { Transaction as EvmTransaction, TransactionRaw } from "@ledgerhq/coin-ev
 import { isOldestPendingOperation } from "@ledgerhq/ledger-wallet-framework/operation";
 import { TransactionHasBeenValidatedError } from "@ledgerhq/errors";
 import { getMainAccount } from "@ledgerhq/live-common/account/index";
-import { useAccountBridge } from "@ledgerhq/live-common/bridge/useAccountBridge";
+import { getAccountBridge } from "@ledgerhq/live-common/bridge/index";
 import useBridgeTransaction from "@ledgerhq/live-common/bridge/useBridgeTransaction";
+import { useAccountBridge } from "@ledgerhq/live-common/bridge/useAccountBridge";
 import { getEnv } from "@ledgerhq/live-env";
 import { log } from "@ledgerhq/logs";
 import { Flex } from "@ledgerhq/native-ui";
@@ -42,12 +43,13 @@ function MethodSelectionComponent({ navigation, route }: Props) {
   const [transactionHasBeenValidated, setTransactionHasBeenValidated] = useState(false);
 
   const mainAccount = getMainAccount(account, parentAccount);
+  const bridgeHook = useAccountBridge(account, parentAccount);
 
   const transactionToEdit = useFromTransactionRaw<EvmTransaction>(
     operation.transactionRaw as TransactionRaw,
   );
 
-  const { transaction, setTransaction } = useBridgeTransaction<EvmTransaction>(() => ({
+  const { transaction, setTransaction } = useBridgeTransaction<EvmTransaction>(bridgeHook, () => ({
     account,
     parentAccount,
     transaction: transactionToEdit,
@@ -84,7 +86,7 @@ function MethodSelectionComponent({ navigation, route }: Props) {
         : false,
     [mainAccount, transactionToEdit],
   );
-  const bridge: AccountBridge<EvmTransaction> = useAccountBridge<EvmTransaction>(account, parentAccount as Account);
+  const bridge: AccountBridge<EvmTransaction> = getAccountBridge(account, parentAccount as Account);
 
   const onSelect = useCallback(
     async (option: EditType) => {

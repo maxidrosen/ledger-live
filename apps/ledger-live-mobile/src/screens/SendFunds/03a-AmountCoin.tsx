@@ -5,10 +5,11 @@ import Switch from "~/components/Switch";
 import SafeAreaView from "~/components/SafeAreaView";
 import { Trans, useTranslation } from "~/context/Locale";
 import { useTheme } from "@react-navigation/native";
-import useBridgeTransaction from "@ledgerhq/live-common/bridge/useBridgeTransaction";
 import { useAccountBridge } from "@ledgerhq/live-common/bridge/useAccountBridge";
 import type { Transaction } from "@ledgerhq/live-common/generated/types";
 import type { AccountLike, Account } from "@ledgerhq/types-live";
+import useBridgeTransaction from "@ledgerhq/live-common/bridge/useBridgeTransaction";
+import { getAccountBridge } from "@ledgerhq/live-common/bridge/index";
 import { useDebounce } from "@ledgerhq/live-common/hooks/useDebounce";
 import { getAccountCurrency } from "@ledgerhq/live-common/account/helpers";
 import { ScreenName } from "~/const";
@@ -64,6 +65,7 @@ function SendAmountCoinContent({ navigation, route, account, parentAccount }: Co
   const [infoModalOpen, setInfoModalOpen] = useState(false);
 
   const { transaction, setTransaction, status, bridgePending, bridgeError } = useBridgeTransaction(
+    bridge,
     () => ({
       transaction: route.params.transaction,
       account,
@@ -73,7 +75,7 @@ function SendAmountCoinContent({ navigation, route, account, parentAccount }: Co
   const debouncedTransaction = useDebounce(transaction, 500);
   useEffect(() => {
     let cancelled = false;
-    bridge
+    getAccountBridge(account, parentAccount)
       .estimateMaxSpendable({
         account,
         parentAccount,
@@ -87,10 +89,12 @@ function SendAmountCoinContent({ navigation, route, account, parentAccount }: Co
     return () => {
       cancelled = true;
     };
-  }, [account, parentAccount, debouncedTransaction, bridge]);
+  }, [account, parentAccount, debouncedTransaction]);
   const onChange = useCallback(
     (amount: BigNumber) => {
-      if (!amount.isNaN() && transaction) {
+      if (!amount.isNaN()) {
+        if (!account) return;
+        const bridge = getAccountBridge(account, parentAccount);
         setTransaction(
           bridge.updateTransaction(transaction, {
             amount,
@@ -98,7 +102,7 @@ function SendAmountCoinContent({ navigation, route, account, parentAccount }: Co
         );
       }
     },
-    [setTransaction, bridge, transaction],
+    [setTransaction, account, parentAccount, transaction],
   );
   const toggleUseAllAmount = useCallback(() => {
     if (!transaction) return;
@@ -129,8 +133,9 @@ function SendAmountCoinContent({ navigation, route, account, parentAccount }: Co
   const onBridgeErrorRetry = useCallback(() => {
     setBridgeErr(null);
     if (!transaction) return;
+    const bridge = getAccountBridge(account, parentAccount);
     setTransaction(bridge.updateTransaction(transaction, {}));
-  }, [setTransaction, bridge, transaction]);
+  }, [setTransaction, account, parentAccount, transaction]);
   const blur = useCallback(() => Keyboard.dismiss(), []);
   const onMaxSpendableLearnMore = useCallback(() => Linking.openURL(urls.maxSpendable), []);
 
