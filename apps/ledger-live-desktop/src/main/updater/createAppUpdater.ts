@@ -9,7 +9,7 @@ type Opts = {
   getHashFileSignature: () => Promise<Buffer>;
 };
 export default function createAppUpdater(opts: Opts): {
-  verify: () => Promise<void>;
+  verify: (pubKey?: string) => Promise<void>;
 } {
   const {
     filename,
@@ -25,11 +25,11 @@ export default function createAppUpdater(opts: Opts): {
   // - verify signature
   // - compare hash with update hash
   // throw if any step fail.
-  async function verify() {
+  async function verify(pubKey?: string) {
     const [hashFile, hashFileSignature, key] = await Promise.all([
       getHashFile(),
       getHashFileSignature(),
-      getNextKey(),
+      pubKey ?? getNextKey(),
     ]);
     await verifyHashFileSignature(hashFile, hashFileSignature, key);
     await compareHash(hashFile);

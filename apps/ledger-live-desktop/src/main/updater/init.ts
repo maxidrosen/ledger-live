@@ -17,6 +17,8 @@ export type UpdateStatus =
 const UPDATE_CHECK_IGNORE = Boolean(process.env.UPDATE_CHECK_IGNORE);
 const UPDATE_CHECK_FEED =
   process.env.UPDATE_CHECK_FEED || "https://resources.live.ledger.app/public_resources/signatures";
+const VERIFY_PUB_KEY = process.env.VERIFY_PUB_KEY;
+
 const sendStatus = (status: UpdateStatus, payload?: unknown) => {
   const win = getMainWindow();
   if (win) {
@@ -31,14 +33,13 @@ const handleDownload = async (info: UpdateDownloadedEvent) => {
     sendStatus("check-success");
     autoUpdater.autoInstallOnAppQuit = true;
   }
-  if (__PRERELEASE__) return onSuccess();
   try {
     sendStatus("checking");
     const appUpdater = await createElectronAppUpdater({
       feedURL: UPDATE_CHECK_FEED,
       info,
     });
-    await appUpdater.verify();
+    await appUpdater.verify(VERIFY_PUB_KEY);
     onSuccess();
   } catch (err) {
     console.error(err);
