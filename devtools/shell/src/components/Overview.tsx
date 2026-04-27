@@ -6,7 +6,7 @@ import { CATEGORY_ICONS } from "../categoryConfig";
 import { STORAGE_KEY, deserialize } from "../hooks/devToolsStorageUtils";
 import { TOOLS } from "../tools.config";
 
-interface EmptyStateProps {
+interface OverviewProps {
   categories: Array<{ category: Category; tools: Tool[] }>;
   onSelect: (id: string) => void;
   "data-testid"?: string;
@@ -72,7 +72,7 @@ function ToolCard({ tool, onSelect }: { tool: Tool; onSelect: (id: string) => vo
   );
 }
 
-export function EmptyState({ categories, onSelect, "data-testid": testId }: EmptyStateProps) {
+export function Overview({ categories, onSelect, "data-testid": testId }: OverviewProps) {
   const [recentTools, setRecentTools] = useState<Tool[]>([]);
 
   useEffect(() => {

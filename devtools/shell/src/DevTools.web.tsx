@@ -3,7 +3,7 @@ import { ledgerLiveThemes } from "@ledgerhq/lumen-design-core";
 import { TOOLS } from "./tools.config";
 import { useDevToolsNavigation } from "./hooks";
 import { useDevToolsStorage } from "./hooks/useDevToolsStorage.web";
-import { Sidebar, ToolShell, EmptyState } from "./components";
+import { Sidebar, ToolShell, Overview } from "./components";
 
 type ColorScheme = "light" | "dark" | "system";
 
@@ -39,7 +39,7 @@ export const DevTools = ({ colorScheme = "system" }: DevToolsProps) => {
             {activeTool ? (
               <ToolShell tool={activeTool} onBack={clearActiveTool} />
             ) : (
-              <EmptyState
+              <Overview
                 categories={categories}
                 onSelect={setActiveToolId}
                 data-testid="devtools-empty"
