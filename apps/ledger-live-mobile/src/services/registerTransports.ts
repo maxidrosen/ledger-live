@@ -7,7 +7,10 @@ import { getDeviceModel } from "@ledgerhq/devices";
 import { DescriptorEvent } from "@ledgerhq/hw-transport";
 import { DeviceModelId } from "@ledgerhq/types-devices";
 import getBLETransport from "~/transport/bleTransport";
-import { DeviceManagementKitHIDTransport } from "@ledgerhq/live-dmk-mobile";
+import {
+  DeviceManagementKitHIDTransport,
+  DeviceManagementKitHTTPProxyTransport,
+} from "@ledgerhq/live-dmk-mobile";
 import { DeviceManagementKitTransportSpeculos } from "@ledgerhq/live-dmk-speculos";
 import { retry } from "@ledgerhq/live-common/promise";
 
@@ -47,10 +50,10 @@ export const registerTransports = () => {
   }
 
   // Add dev mode support of an http proxy
-  let DebugHttpProxy: ReturnType<typeof withStaticURLs>;
   const httpdebug: TransportModule = {
     id: "httpdebug",
-    open: id => (id.startsWith("httpdebug|") ? DebugHttpProxy.open(id.slice(10)) : null),
+    open: id =>
+      id.startsWith("httpdebug|") ? DeviceManagementKitHTTPProxyTransport.open(id.slice(10)) : null,
     disconnect: id =>
       id.startsWith("httpdebug|")
         ? Promise.resolve() // nothing to do
@@ -58,7 +61,7 @@ export const registerTransports = () => {
   };
 
   if (__DEV__ && Config.DEVICE_PROXY_URL) {
-    DebugHttpProxy = withStaticURLs(Config.DEVICE_PROXY_URL.split("|"));
+    const DebugHttpProxy = withStaticURLs(Config.DEVICE_PROXY_URL.split("|"));
     httpdebug.discovery = new Observable<DescriptorEvent<string>>(o =>
       DebugHttpProxy.listen(o),
     ).pipe(
@@ -72,8 +75,6 @@ export const registerTransports = () => {
         name: descriptor,
       })),
     );
-  } else {
-    DebugHttpProxy = withStaticURLs([]);
   }
 
   registerTransportModule(httpdebug);
