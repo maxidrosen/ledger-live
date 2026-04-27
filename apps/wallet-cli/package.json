@@ -33,6 +33,8 @@
     "@ledgerhq/device-management-kit": "catalog:",
     "@ledgerhq/errors": "workspace:^",
     "@ledgerhq/hw-transport": "workspace:*",
+    "@ledgerhq/hw-ledger-key-ring-protocol": "workspace:^",
+    "@ledgerhq/ledger-key-ring-protocol": "workspace:^",
     "@ledgerhq/ledger-wallet-framework": "workspace:^",
     "@ledgerhq/live-common": "workspace:^",
     "@ledgerhq/live-config": "workspace:^",

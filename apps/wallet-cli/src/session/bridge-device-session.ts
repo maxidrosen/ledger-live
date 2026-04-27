@@ -1,4 +1,5 @@
 import { getCryptoCurrencyById } from "@ledgerhq/live-common/currencies/index";
+import { TRUSTCHAIN_APP_NAME } from "@ledgerhq/hw-ledger-key-ring-protocol/ApduDevice";
 import { connectLedgerApp } from "../device/connect-ledger-app";
 import { toWalletCliDeviceError } from "../device/wallet-cli-device-error";
 import {
@@ -15,10 +16,29 @@ export async function withCurrencyDeviceSession<T>(
   walletCliDebug("Ensuring DMK transport…");
   try {
     const transport = await ensureWalletCliDmkTransport();
-    walletCliDebug(`Connecting Ledger app (${managerAppName})…`);
-    await connectLedgerApp(transport.dmk, transport.sessionId, managerAppName);
-    walletCliDebug("Device session ready.");
     try {
+      walletCliDebug(`Connecting Ledger app (${managerAppName})…`);
+      await connectLedgerApp(transport.dmk, transport.sessionId, managerAppName);
+      walletCliDebug("Device session ready.");
+      return await fn();
+    } finally {
+      walletCliDebug("Resetting device session…");
+      await resetWalletCliDmkSession();
+    }
+  } catch (e) {
+    throw toWalletCliDeviceError(e);
+  }
+}
+
+/** Open the Ledger Sync app and run a function that sends LKRP APDUs. No currency required. */
+export async function withLkrpDeviceSession<T>(fn: () => Promise<T>): Promise<T> {
+  walletCliDebug("Ensuring DMK transport for LKRP…");
+  try {
+    const transport = await ensureWalletCliDmkTransport();
+    try {
+      walletCliDebug("Connecting Ledger Sync app…");
+      await connectLedgerApp(transport.dmk, transport.sessionId, TRUSTCHAIN_APP_NAME);
+      walletCliDebug("Ledger Sync app open.");
       return await fn();
     } finally {
       walletCliDebug("Resetting device session…");

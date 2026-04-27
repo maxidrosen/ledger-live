@@ -93,6 +93,17 @@ export interface CommandOutput {
    * Human: error lines + exit 1.
    */
   swapQuotesUnavailable(message: string, errors: SwapQuoteProviderError[]): never;
+
+  /** Output secrets init result (human: member + rootId lines; json: envelope). */
+  secretsInit(result: { memberName: string; rootId: string }): void;
+  /** Output domain keys table (human: table or empty message; json: envelope with keys array). */
+  secretsKeys(domains: ReadonlyArray<{ domain: string; firstUsed: string }>): void;
+  /** Output secrets destroy result (human: colored message; json: envelope). */
+  secretsDestroy(remoteSucceeded: boolean): void;
+  /** Output encrypt-to-file result (human: ✔ line; json: envelope with output path + bytes). */
+  secretsEncrypt(result: { dest: string; bytes: number }): void;
+  /** Output decrypt-to-file result (human: ✔ line; json: envelope with output path). */
+  secretsDecrypt(result: { dest: string }): void;
 }
 
 // ---------------------------------------------------------------------------
@@ -249,6 +260,42 @@ class HumanCommandOutput implements CommandOutput {
     }
     throw new CliProcessExitError(1);
   }
+
+  secretsInit({ memberName, rootId }: { memberName: string; rootId: string }): void {
+    writeStdout("");
+    writeStdout(`${colors.bold("Member:")}  ${memberName}`);
+    writeStdout(`${colors.bold("Root ID:")} ${rootId}`);
+    writeStdout(colors.dim("Encrypt/decrypt with: wallet-cli secrets encrypt --key <domain>"));
+  }
+
+  secretsKeys(domains: ReadonlyArray<{ domain: string; firstUsed: string }>): void {
+    if (domains.length === 0) {
+      writeStdout(colors.dim("No domain keys tracked yet. Use `secrets encrypt --key <domain>` to create one."));
+      return;
+    }
+    const w = Math.max(6, ...domains.map(d => d.domain.length));
+    writeStdout(`${colors.bold("Domain".padEnd(w))}  ${colors.bold("First Used")}`);
+    writeStdout("─".repeat(w + 2 + 10));
+    for (const { domain, firstUsed } of domains) {
+      writeStdout(`${domain.padEnd(w)}  ${firstUsed.slice(0, 10)}`);
+    }
+  }
+
+  secretsDestroy(remoteSucceeded: boolean): void {
+    writeStdout(
+      remoteSucceeded
+        ? `${colors.green("✔")} Encryption CLI trustchain destroyed.`
+        : `${colors.green("✔")} Encryption CLI local credentials wiped.`,
+    );
+  }
+
+  secretsEncrypt({ dest, bytes }: { dest: string; bytes: number }): void {
+    writeStdout(`${colors.green("✔")} Written to ${dest} (${bytes} bytes, AES-256-GCM)`);
+  }
+
+  secretsDecrypt({ dest }: { dest: string }): void {
+    writeStdout(`${colors.green("✔")} Written to ${dest}`);
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -370,6 +417,26 @@ class JsonCommandOutput implements CommandOutput {
   swapQuotesUnavailable(message: string, _errors: SwapQuoteProviderError[]): never {
     writeStdout(this._errorEnvelope(message));
     throw new CliProcessExitError(1);
+  }
+
+  secretsInit({ memberName, rootId }: { memberName: string; rootId: string }): void {
+    writeStdout(this._envelope({ member: memberName, rootId }));
+  }
+
+  secretsKeys(domains: ReadonlyArray<{ domain: string; firstUsed: string }>): void {
+    writeStdout(this._envelope({ keys: domains.map(d => ({ domain: d.domain, firstUsed: d.firstUsed })) }));
+  }
+
+  secretsDestroy(remoteSucceeded: boolean): void {
+    writeStdout(this._envelope({ destroyed: remoteSucceeded, local_wiped: true }));
+  }
+
+  secretsEncrypt({ dest, bytes }: { dest: string; bytes: number }): void {
+    writeStdout(this._envelope({ output: dest, bytes }));
+  }
+
+  secretsDecrypt({ dest }: { dest: string }): void {
+    writeStdout(this._envelope({ output: dest }));
   }
 }
 

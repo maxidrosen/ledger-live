@@ -6,30 +6,42 @@ import { createGeneratedHelpers, registerGeneratedStore } from '@bunli/core'
 
 import Account from '../src/commands/account/index.js'
 import Balances from '../src/commands/balances.js'
+import Decrypt from '../src/commands/secrets/decrypt.js'
+import Destroy from '../src/commands/secrets/destroy.js'
 import Discover from '../src/commands/account/discover.js'
+import Encrypt from '../src/commands/secrets/encrypt.js'
 import FreshAddress from '../src/commands/account/fresh-address.js'
+import Init from '../src/commands/secrets/init.js'
+import Keys from '../src/commands/secrets/keys.js'
 import Operations from '../src/commands/operations.js'
 import Quote from '../src/commands/swap/quote.js'
 import Receive from '../src/commands/receive.js'
 import Reset from '../src/commands/session/reset.js'
+import Secrets from '../src/commands/secrets/index.js'
 import Send from '../src/commands/send.js'
 import Session from '../src/commands/session/index.js'
 import Swap from '../src/commands/swap/index.js'
 import View from '../src/commands/session/view.js'
 
 // Narrow list of command names to avoid typeof-cycles in types
-const names = ['account', 'balances', 'discover', 'fresh-address', 'operations', 'quote', 'receive', 'reset', 'send', 'session', 'swap', 'view'] as const
+const names = ['account', 'balances', 'decrypt', 'destroy', 'discover', 'encrypt', 'fresh-address', 'init', 'keys', 'operations', 'quote', 'receive', 'reset', 'secrets', 'send', 'session', 'swap', 'view'] as const
 type GeneratedNames = typeof names[number]
 
 const modules: Record<GeneratedNames, Command<any>> = {
   'account': Account,
   'balances': Balances,
+  'decrypt': Decrypt,
+  'destroy': Destroy,
   'discover': Discover,
+  'encrypt': Encrypt,
   'fresh-address': FreshAddress,
+  'init': Init,
+  'keys': Keys,
   'operations': Operations,
   'quote': Quote,
   'receive': Receive,
   'reset': Reset,
+  'secrets': Secrets,
   'send': Send,
   'session': Session,
   'swap': Swap,
@@ -71,6 +83,25 @@ const metadata: Record<GeneratedNames, GeneratedCommandMeta> = {
       },
       path: './src/commands/balances'
     },
+  'decrypt': {
+      name: 'decrypt',
+      description: 'Decrypt data with a domain-scoped AES-256-GCM key',
+      options: {
+        'key': { type: 'z.string.min', required: true, hasDefault: false, description: 'Domain name used to derive the scoped decryption key (e.g. openClaw-prod)', short: 'k', min: 1, minLength: 1, schema: {"type":"zod","method":"min","args":[{"type":"unknown","raw":{"type":"NumericLiteral","start":577,"end":578,"loc":{"start":{"line":14,"column":31,"index":577},"end":{"line":14,"column":32,"index":578}},"extra":{"rawValue":1,"raw":"1"},"value":1}}]}, validator: '(val) => true' },
+        'input': { type: 'z.string.optional', required: false, hasDefault: false, description: 'Input file (default: stdin)', short: 'i', fileType: 'file', schema: {"type":"zod","method":"optional","args":[]}, validator: '(val) => true' },
+        'output': { type: 'z.string.optional', required: false, hasDefault: false, description: 'Output file (default: stdout)', short: 'o', fileType: 'file', schema: {"type":"zod","method":"optional","args":[]}, validator: '(val) => true' },
+        'format': { type: 'OutputFormatSchema.default', required: true, hasDefault: true, default: "human", description: 'Output format: human (default) or json', schema: {"type":"zod","method":"default","args":[{"type":"literal","value":"human"}]}, validator: '(val) => true' }
+      },
+      path: './src/commands/secrets/decrypt'
+    },
+  'destroy': {
+      name: 'destroy',
+      description: 'Destroy the local trustchain membership and wipe credentials',
+      options: {
+        'output': { type: 'OutputFormatSchema.default', required: true, hasDefault: true, default: "human", description: 'Output format: human (default) or json', schema: {"type":"zod","method":"default","args":[{"type":"literal","value":"human"}]}, validator: '(val) => true' }
+      },
+      path: './src/commands/secrets/destroy'
+    },
   'discover': {
       name: 'discover',
       description: 'Discover accounts for a network on the connected device',
@@ -80,6 +111,17 @@ const metadata: Record<GeneratedNames, GeneratedCommandMeta> = {
       },
       path: './src/commands/account/discover'
     },
+  'encrypt': {
+      name: 'encrypt',
+      description: 'Encrypt data with a domain-scoped AES-256-GCM key',
+      options: {
+        'key': { type: 'z.string.min', required: true, hasDefault: false, description: 'Domain name used to derive a scoped encryption key (e.g. openClaw-prod)', short: 'k', min: 1, minLength: 1, schema: {"type":"zod","method":"min","args":[{"type":"unknown","raw":{"type":"NumericLiteral","start":577,"end":578,"loc":{"start":{"line":14,"column":31,"index":577},"end":{"line":14,"column":32,"index":578}},"extra":{"rawValue":1,"raw":"1"},"value":1}}]}, validator: '(val) => true' },
+        'input': { type: 'z.string.optional', required: false, hasDefault: false, description: 'Input file (default: stdin)', short: 'i', fileType: 'file', schema: {"type":"zod","method":"optional","args":[]}, validator: '(val) => true' },
+        'output': { type: 'z.string.optional', required: false, hasDefault: false, description: 'Output file (default: stdout)', short: 'o', fileType: 'file', schema: {"type":"zod","method":"optional","args":[]}, validator: '(val) => true' },
+        'format': { type: 'OutputFormatSchema.default', required: true, hasDefault: true, default: "human", description: 'Output format: human (default) or json', schema: {"type":"zod","method":"default","args":[{"type":"literal","value":"human"}]}, validator: '(val) => true' }
+      },
+      path: './src/commands/secrets/encrypt'
+    },
   'fresh-address': {
       name: 'fresh-address',
       description: 'Resolve the fresh receive address for an account descriptor (no device required)',
@@ -88,6 +130,23 @@ const metadata: Record<GeneratedNames, GeneratedCommandMeta> = {
         'output': { type: 'OutputFormatSchema.default', required: true, hasDefault: true, default: "human", description: 'Output format: human (default) or json', schema: {"type":"zod","method":"default","args":[{"type":"literal","value":"human"}]}, validator: '(val) => true' }
       },
       path: './src/commands/account/fresh-address'
+    },
+  'init': {
+      name: 'init',
+      description: 'Register this machine as a trustchain member (device required)',
+      options: {
+        'name': { type: 'z.string.min.max.optional', required: false, hasDefault: false, short: 'n', min: 1, minLength: 1, schema: {"type":"zod","method":"optional","args":[]}, validator: '(val) => true' },
+        'output': { type: 'OutputFormatSchema.default', required: true, hasDefault: true, default: "human", description: 'Output format: human (default) or json', schema: {"type":"zod","method":"default","args":[{"type":"literal","value":"human"}]}, validator: '(val) => true' }
+      },
+      path: './src/commands/secrets/init'
+    },
+  'keys': {
+      name: 'keys',
+      description: 'List tracked domain keys from the local secrets store',
+      options: {
+        'output': { type: 'OutputFormatSchema.default', required: true, hasDefault: true, default: "human", description: 'Output format: human (default) or json', schema: {"type":"zod","method":"default","args":[{"type":"literal","value":"human"}]}, validator: '(val) => true' }
+      },
+      path: './src/commands/secrets/keys'
     },
   'operations': {
       name: 'operations',
@@ -130,6 +189,60 @@ const metadata: Record<GeneratedNames, GeneratedCommandMeta> = {
         'output': { type: 'OutputFormatSchema.default', required: true, hasDefault: true, default: "human", description: 'Output format: human (default) or json', schema: {"type":"zod","method":"default","args":[{"type":"literal","value":"human"}]}, validator: '(val) => true' }
       },
       path: './src/commands/session/reset'
+    },
+  'secrets': {
+      name: 'secrets',
+      description: 'Hardware-backed file encryption using the trustchain',
+      commands: [
+        {
+          name: 'init',
+          description: 'Register this machine as a trustchain member (device required)',
+          options: {
+            'name': { type: 'z.string.min.max.optional', required: false, hasDefault: false, short: 'n', min: 1, minLength: 1, schema: {"type":"zod","method":"optional","args":[]}, validator: '(val) => true' },
+            'output': { type: 'OutputFormatSchema.default', required: true, hasDefault: true, default: "human", description: 'Output format: human (default) or json', schema: {"type":"zod","method":"default","args":[{"type":"literal","value":"human"}]}, validator: '(val) => true' }
+          },
+          path: './src/commands/secrets/init'
+        },
+        {
+          name: 'encrypt',
+          description: 'Encrypt data with a domain-scoped AES-256-GCM key',
+          options: {
+            'key': { type: 'z.string.min', required: true, hasDefault: false, description: 'Domain name used to derive a scoped encryption key (e.g. openClaw-prod)', short: 'k', min: 1, minLength: 1, schema: {"type":"zod","method":"min","args":[{"type":"unknown","raw":{"type":"NumericLiteral","start":577,"end":578,"loc":{"start":{"line":14,"column":31,"index":577},"end":{"line":14,"column":32,"index":578}},"extra":{"rawValue":1,"raw":"1"},"value":1}}]}, validator: '(val) => true' },
+            'input': { type: 'z.string.optional', required: false, hasDefault: false, description: 'Input file (default: stdin)', short: 'i', fileType: 'file', schema: {"type":"zod","method":"optional","args":[]}, validator: '(val) => true' },
+            'output': { type: 'z.string.optional', required: false, hasDefault: false, description: 'Output file (default: stdout)', short: 'o', fileType: 'file', schema: {"type":"zod","method":"optional","args":[]}, validator: '(val) => true' },
+            'format': { type: 'OutputFormatSchema.default', required: true, hasDefault: true, default: "human", description: 'Output format: human (default) or json', schema: {"type":"zod","method":"default","args":[{"type":"literal","value":"human"}]}, validator: '(val) => true' }
+          },
+          path: './src/commands/secrets/encrypt'
+        },
+        {
+          name: 'decrypt',
+          description: 'Decrypt data with a domain-scoped AES-256-GCM key',
+          options: {
+            'key': { type: 'z.string.min', required: true, hasDefault: false, description: 'Domain name used to derive the scoped decryption key (e.g. openClaw-prod)', short: 'k', min: 1, minLength: 1, schema: {"type":"zod","method":"min","args":[{"type":"unknown","raw":{"type":"NumericLiteral","start":577,"end":578,"loc":{"start":{"line":14,"column":31,"index":577},"end":{"line":14,"column":32,"index":578}},"extra":{"rawValue":1,"raw":"1"},"value":1}}]}, validator: '(val) => true' },
+            'input': { type: 'z.string.optional', required: false, hasDefault: false, description: 'Input file (default: stdin)', short: 'i', fileType: 'file', schema: {"type":"zod","method":"optional","args":[]}, validator: '(val) => true' },
+            'output': { type: 'z.string.optional', required: false, hasDefault: false, description: 'Output file (default: stdout)', short: 'o', fileType: 'file', schema: {"type":"zod","method":"optional","args":[]}, validator: '(val) => true' },
+            'format': { type: 'OutputFormatSchema.default', required: true, hasDefault: true, default: "human", description: 'Output format: human (default) or json', schema: {"type":"zod","method":"default","args":[{"type":"literal","value":"human"}]}, validator: '(val) => true' }
+          },
+          path: './src/commands/secrets/decrypt'
+        },
+        {
+          name: 'keys',
+          description: 'List tracked domain keys from the local secrets store',
+          options: {
+            'output': { type: 'OutputFormatSchema.default', required: true, hasDefault: true, default: "human", description: 'Output format: human (default) or json', schema: {"type":"zod","method":"default","args":[{"type":"literal","value":"human"}]}, validator: '(val) => true' }
+          },
+          path: './src/commands/secrets/keys'
+        },
+        {
+          name: 'destroy',
+          description: 'Destroy the local trustchain membership and wipe credentials',
+          options: {
+            'output': { type: 'OutputFormatSchema.default', required: true, hasDefault: true, default: "human", description: 'Output format: human (default) or json', schema: {"type":"zod","method":"default","args":[{"type":"literal","value":"human"}]}, validator: '(val) => true' }
+          },
+          path: './src/commands/secrets/destroy'
+        }
+      ],
+      path: './src/commands/secrets/index'
     },
   'send': {
       name: 'send',
