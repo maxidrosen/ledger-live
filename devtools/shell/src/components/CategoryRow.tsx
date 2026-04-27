@@ -47,6 +47,7 @@ export function CategoryRow({
                 title={tool.label}
                 isActive={activeToolId === tool.id}
                 onClick={() => onSelectTool(tool.id)}
+                owner={tool.owner}
               />
             </li>
           ))}

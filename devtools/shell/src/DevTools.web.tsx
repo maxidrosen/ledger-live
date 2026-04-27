@@ -13,7 +13,7 @@ interface DevToolsProps {
 
 export const DevTools = ({ colorScheme = "system" }: DevToolsProps) => {
   const { activeTool, setActiveToolId, clearActiveTool, categories } = useDevToolsNavigation(TOOLS);
-  useDevToolsStorage(activeTool?.id, setActiveToolId);
+  const { recentToolIds } = useDevToolsStorage(activeTool?.id, setActiveToolId);
 
   return (
     <ThemeProvider themes={ledgerLiveThemes} colorScheme={colorScheme}>
@@ -28,6 +28,7 @@ export const DevTools = ({ colorScheme = "system" }: DevToolsProps) => {
             categories={categories}
             activeToolId={activeTool?.id}
             onSelectTool={setActiveToolId}
+            onHome={clearActiveTool}
           />
 
           <Divider orientation="vertical" />
@@ -41,6 +42,7 @@ export const DevTools = ({ colorScheme = "system" }: DevToolsProps) => {
             ) : (
               <Overview
                 categories={categories}
+                recentToolIds={recentToolIds}
                 onSelect={setActiveToolId}
                 data-testid="devtools-empty"
               />

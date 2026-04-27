@@ -33,5 +33,6 @@ export function deserialize(raw: string): DevToolsPersistedState {
 }
 
 export function addToRecent(recentToolIds: string[], toolId: string): string[] {
+  if (recentToolIds[0] === toolId) return recentToolIds;
   return [toolId, ...recentToolIds.filter(id => id !== toolId)].slice(0, MAX_RECENT_TOOLS);
 }

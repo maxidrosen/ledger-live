@@ -1,15 +1,10 @@
 import { useEffect, useState } from "react";
-import {
-  STORAGE_KEY,
-  serialize,
-  deserialize,
-  addToRecent,
-} from "./devToolsStorageUtils";
+import { STORAGE_KEY, serialize, deserialize, addToRecent } from "./devToolsStorageUtils";
 
 export function useDevToolsStorage(
   activeToolId: string | undefined,
   setActiveToolId: (id: string) => void,
-): void {
+): { recentToolIds: string[] } {
   const [recentToolIds, setRecentToolIds] = useState<string[]>([]);
 
   useEffect(() => {
@@ -29,6 +24,7 @@ export function useDevToolsStorage(
     if (!activeToolId) return;
     setRecentToolIds(prev => {
       const next = addToRecent(prev, activeToolId);
+      if (next === prev) return prev;
       try {
         localStorage.setItem(STORAGE_KEY, serialize({ activeToolId, recentToolIds: next }));
       } catch {
@@ -37,4 +33,6 @@ export function useDevToolsStorage(
       return next;
     });
   }, [activeToolId]);
+
+  return { recentToolIds };
 }
