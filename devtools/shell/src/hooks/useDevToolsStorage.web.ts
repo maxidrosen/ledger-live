@@ -1,16 +1,24 @@
-import { useEffect } from "react";
-import { STORAGE_KEY, serialize, deserialize } from "./devToolsStorageUtils";
+import { useEffect, useState } from "react";
+import {
+  STORAGE_KEY,
+  serialize,
+  deserialize,
+  addToRecent,
+} from "./devToolsStorageUtils";
 
 export function useDevToolsStorage(
   activeToolId: string | undefined,
   setActiveToolId: (id: string) => void,
 ): void {
+  const [recentToolIds, setRecentToolIds] = useState<string[]>([]);
+
   useEffect(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
-        const { activeToolId: stored } = deserialize(raw);
+        const { activeToolId: stored, recentToolIds: storedRecents } = deserialize(raw);
         if (stored) setActiveToolId(stored);
+        if (storedRecents) setRecentToolIds(storedRecents);
       }
     } catch {
       // ignore
@@ -18,10 +26,15 @@ export function useDevToolsStorage(
   }, []);
 
   useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, serialize({ activeToolId: activeToolId ?? null }));
-    } catch {
-      // ignore
-    }
+    if (!activeToolId) return;
+    setRecentToolIds(prev => {
+      const next = addToRecent(prev, activeToolId);
+      try {
+        localStorage.setItem(STORAGE_KEY, serialize({ activeToolId, recentToolIds: next }));
+      } catch {
+        // ignore
+      }
+      return next;
+    });
   }, [activeToolId]);
 }

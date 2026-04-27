@@ -13,7 +13,6 @@ interface DevToolsProps {
 
 export const DevTools = ({ colorScheme = "system" }: DevToolsProps) => {
   const { activeTool, setActiveToolId, categories } = useDevToolsNavigation(TOOLS);
-
   useDevToolsStorage(activeTool?.id, setActiveToolId);
 
   return (

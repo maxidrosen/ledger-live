@@ -1,30 +1,10 @@
 import { SearchInput } from "@ledgerhq/lumen-ui-react";
-import {
-  Settings,
-  Experiment2,
-  Bluetooth,
-  DocumentCode,
-  Bug,
-  Information,
-  SpeedFast,
-  Planet,
-} from "@ledgerhq/lumen-ui-react/symbols";
 import { useMemo, useState } from "react";
 import { Category } from "../types";
 import type { Tool } from "../types";
 import { useAccordion } from "../hooks";
+import { CATEGORY_ICONS } from "../categoryConfig";
 import { CategoryRow } from "./CategoryRow";
-
-const CATEGORY_ICONS = {
-  [Category.CONFIGURATION]: Settings,
-  [Category.FEATURES_AND_FLOWS]: Experiment2,
-  [Category.CONNECTIVITY]: Bluetooth,
-  [Category.GENERATORS]: DocumentCode,
-  [Category.DEBUGGING]: Bug,
-  [Category.INFORMATION]: Information,
-  [Category.PERFORMANCE]: SpeedFast,
-  [Category.PLAYGROUND]: Planet,
-};
 
 interface SidebarProps {
   categories: Array<{ category: Category; tools: Tool[] }>;
