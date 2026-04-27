@@ -79,7 +79,6 @@
     "@ledgerhq/live-network": "workspace:^",
     "@ledgerhq/logs": "workspace:^",
     "@ledgerhq/types-live": "workspace:^",
-    "@taquito/ledger-signer": "^23.0.0-RC.0",
     "@taquito/rpc": "^23.0.0-RC.0",
     "@taquito/taquito": "^23.0.0-RC.0",
     "@taquito/utils": "^23.0.0-RC.0",
@@ -125,10 +124,5 @@
     "unimported": "unimported",
     "format": "oxfmt src",
     "format:check": "oxfmt src --check"
-  },
-  "overrides": {
-    "@taquito/ledger-signer": {
-      "@ledgerhq/hw-transport": "../_EXCLUDED_"
-    }
   }
 }

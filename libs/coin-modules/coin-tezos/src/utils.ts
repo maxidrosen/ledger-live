@@ -1,5 +1,3 @@
-import { DerivationType } from "@taquito/ledger-signer";
-import { compressPublicKey } from "@taquito/ledger-signer/dist/lib/utils";
 import { validatePublicKey, ValidationResult, b58Encode, PrefixV2 } from "@taquito/utils";
 import coinConfig from "./config";
 import type { APIAccount } from "./network/types";
@@ -96,6 +94,15 @@ export function createMockSigner(publicKeyHash: string, publicKey: string) {
   };
 }
 
+function compressSecp256PublicKey(publicKey: Buffer): Buffer | undefined {
+  if (publicKey.length !== 65 || publicKey[0] !== 0x04) {
+    return undefined;
+  }
+
+  const prefix = publicKey[64] & 1 ? 0x03 : 0x02;
+  return Buffer.concat([Buffer.from([prefix]), publicKey.slice(1, 33)]);
+}
+
 /**
  * Normalize a Tezos public key to base58 format (edpk/sppk/p2pk) based on the
  * sender address prefix (tz1/tz2/tz3). Accepts either an already base58-encoded
@@ -119,21 +126,21 @@ export function normalizePublicKeyForAddress(
 
     // Choose curve/prefix from address tz1/tz2/tz3
     // default are values for tz1 and fallbacks to it
-    let derivationType: DerivationType = DerivationType.ED25519;
     let prefix: PrefixV2 = PrefixV2.Ed25519PublicKey;
+    const isSecp256PublicKey = address.startsWith("tz2") || address.startsWith("tz3");
 
     if (address.startsWith("tz2")) {
-      derivationType = DerivationType.SECP256K1;
       prefix = PrefixV2.Secp256k1PublicKey;
     } else if (address.startsWith("tz3")) {
-      derivationType = DerivationType.P256;
       prefix = PrefixV2.P256PublicKey;
     }
 
     // uncompressed public key is 65 bytes, compressed is 33 bytes
     const compressedPubKeyLength = 33;
     if (keyBuf.length > compressedPubKeyLength) {
-      return b58Encode(compressPublicKey(keyBuf, derivationType), prefix);
+      if (!isSecp256PublicKey) return undefined;
+      const compressedPublicKey = compressSecp256PublicKey(keyBuf);
+      return compressedPublicKey ? b58Encode(compressedPublicKey, prefix) : undefined;
     } else {
       return b58Encode(keyBuf, prefix);
     }

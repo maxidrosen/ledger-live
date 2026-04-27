@@ -5819,9 +5819,6 @@ importers:
       '@ledgerhq/types-live':
         specifier: workspace:^
         version: link:../../ledgerjs/packages/types-live
-      '@taquito/ledger-signer':
-        specifier: ^23.0.0-RC.0
-        version: 23.0.0-beta.1
       '@taquito/rpc':
         specifier: ^23.0.0-RC.0
         version: 23.0.0-beta.1
@@ -7480,9 +7477,6 @@ importers:
       '@stricahq/typhonjs':
         specifier: ^3.0.0
         version: 3.0.0
-      '@taquito/ledger-signer':
-        specifier: ^23.0.0-RC.0
-        version: 23.0.0-beta.1
       '@ton-community/ton-ledger':
         specifier: ^7.3.0
         version: 7.3.0(@ton/core@0.62.0(patch_hash=9329da4fb3122df62d833d0c4d847d33a35a9457ee48997870bc044fc80b7324)(@ton/crypto@3.3.0))
@@ -21182,7 +21176,7 @@ packages:
       metro-react-native-babel-preset: '*'
       react: 19.0.0
       react-dom: 19.0.0
-      webpack: '*'
+      webpack: ^5.89.0
     peerDependenciesMeta:
       '@react-native/babel-preset':
         optional: true
@@ -21681,10 +21675,6 @@ packages:
 
   '@taquito/http-utils@23.0.0-beta.1':
     resolution: {integrity: sha512-sF8FEguCTm+NuILpLvtS0yHQixH+sQL9RktOyTvBwUxgBo+d0+V2V/LUjNYLtAVzO1kdHWTM2h44zLP39hvgvw==}
-    engines: {node: '>=18'}
-
-  '@taquito/ledger-signer@23.0.0-beta.1':
-    resolution: {integrity: sha512-cvZTECjcLyn2w1fqzxVwvgt8UE0amJ7giZSuNJArCT/GL/paPj6Wv2euAz9ZtlQBtlNAIgXdOrjBPQCOseWBsg==}
     engines: {node: '>=18'}
 
   '@taquito/local-forging@23.0.0-beta.1':
@@ -23475,7 +23465,7 @@ packages:
     resolution: {integrity: sha512-/FQM1EDkTsf63Ub2C6O7GuYFDsSXUwsaZDurV0np41ocwq0jthUAYCmhBX9f+KwlaCgIuWyr/4WlUQUBfKfZog==}
     engines: {node: '>=6'}
     peerDependencies:
-      rxjs: '*'
+      rxjs: ^5.5.10
       zenObservable: '*'
     peerDependenciesMeta:
       rxjs:
@@ -23998,7 +23988,7 @@ packages:
   basic-ftp@5.0.5:
     resolution: {integrity: sha512-4Bcg1P8xhUuqcii/S0Z9wiHIrQVPMermM1any+MX5GeGD7faD3/msQUDGLol9wOcz4/jbg/WJnGqoJF6LiBdtg==}
     engines: {node: '>=10.0.0'}
-    deprecated: Security vulnerability fixed in 5.2.0, please upgrade
+    deprecated: Security vulnerability fixed in 5.2.1, please upgrade
 
   batch@0.6.1:
     resolution: {integrity: sha512-x+VAiMRL6UPkx+kudNvxTl6hB2XNNCG2r+7wixVfIYwu/2HKRXimwQyaumLjMveWvT2Hkd/cAJw+QBMfJ/EKVw==}
@@ -52146,17 +52136,6 @@ snapshots:
     dependencies:
       '@taquito/core': 23.0.0-beta.1
       node-fetch: 2.7.0
-    transitivePeerDependencies:
-      - encoding
-
-  '@taquito/ledger-signer@23.0.0-beta.1':
-    dependencies:
-      '@ledgerhq/hw-transport': link:libs/ledgerjs/packages/hw-transport
-      '@stablelib/blake2b': 1.0.1
-      '@taquito/core': 23.0.0-beta.1
-      '@taquito/taquito': 23.0.0-beta.1
-      '@taquito/utils': 23.0.0-beta.1
-      buffer: 6.0.3(patch_hash=42321bf7b7c77317e644bb216138271640fb39808e74312037dac216f4b9bc5d)
     transitivePeerDependencies:
       - encoding
 
