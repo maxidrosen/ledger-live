@@ -12,7 +12,7 @@ interface DevToolsProps {
 }
 
 export const DevTools = ({ colorScheme = "system" }: DevToolsProps) => {
-  const { activeTool, setActiveToolId, categories } = useDevToolsNavigation(TOOLS);
+  const { activeTool, setActiveToolId, clearActiveTool, categories } = useDevToolsNavigation(TOOLS);
   useDevToolsStorage(activeTool?.id, setActiveToolId);
 
   return (
@@ -37,7 +37,7 @@ export const DevTools = ({ colorScheme = "system" }: DevToolsProps) => {
             className="flex flex-col flex-1 min-w-0 overflow-auto bg-canvas"
           >
             {activeTool ? (
-              <ToolShell tool={activeTool} />
+              <ToolShell tool={activeTool} onBack={clearActiveTool} />
             ) : (
               <EmptyState
                 categories={categories}

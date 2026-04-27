@@ -19,5 +19,7 @@ export const useDevToolsNavigation = (tools: Tool[]) => {
     [tools, activeToolId],
   );
 
-  return { activeToolId, setActiveToolId, activeTool, categories };
+  const clearActiveTool = () => setActiveToolId(null);
+
+  return { activeToolId, setActiveToolId, clearActiveTool, activeTool, categories };
 };

@@ -1,5 +1,5 @@
 import { SearchInput } from "@ledgerhq/lumen-ui-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Category } from "../types";
 import type { Tool } from "../types";
 import { useAccordion } from "../hooks";
@@ -13,8 +13,15 @@ interface SidebarProps {
 }
 
 export function Sidebar({ categories, activeToolId, onSelectTool }: SidebarProps) {
-  const { isExpanded, toggle } = useAccordion<Category>({ mode: "single" });
+  const { isExpanded, toggle, expand } = useAccordion<Category>({ mode: "single" });
   const [query, setQuery] = useState("");
+
+  // Expand a category if the tool id changes somewhere else
+  useEffect(() => {
+    if (!activeToolId) return;
+    const match = categories.find(({ tools }) => tools.some(t => t.id === activeToolId));
+    if (match) expand(match.category);
+  }, [activeToolId]);
 
   const q = query.trim().toLowerCase();
 
