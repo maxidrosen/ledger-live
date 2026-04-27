@@ -204,7 +204,12 @@ function prefetchedTransactionToBlockTransaction(
   receipt: BlockReceiptInfo,
 ): BlockTransaction {
   const failed = receipt.status === 0;
-  const fees = BigInt(receipt.gasUsed) * BigInt(receipt.gasPrice);
+  // Some EVM chains (e.g. Cronos) omit `effectiveGasPrice`/`gasPrice` from transaction
+  // receipts. In that case, fall back to the tx's own `gasPrice` which is always present
+  // in the prefetched block transaction (via eth_getBlockByNumber(_, true)).
+  const receiptGasPrice = BigInt(receipt.gasPrice);
+  const gasPrice = receiptGasPrice > 0n ? receiptGasPrice : BigInt(tx.gasPrice);
+  const fees = BigInt(receipt.gasUsed) * gasPrice;
   const operations = rpcTransactionToBlockOperations({
     from: tx.from,
     to: tx.to,

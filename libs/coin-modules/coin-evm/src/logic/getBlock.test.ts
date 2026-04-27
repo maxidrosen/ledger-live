@@ -54,6 +54,7 @@ describe("getBlock", () => {
       value: "1000",
       from: address1,
       to: address2,
+      gasPrice: "20000000000",
       ...overrides,
     };
   }
