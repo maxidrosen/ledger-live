@@ -5,15 +5,14 @@ import React, { ReactNode, useCallback, useEffect, useMemo, useState } from "rea
 import { Trans, useTranslation } from "~/context/Locale";
 import { SafeAreaView, StyleSheet, View } from "react-native";
 import { getAccountCurrency, getMainAccount } from "@ledgerhq/live-common/account/index";
-import { getAccountBridge } from "@ledgerhq/live-common/bridge/index";
-import useBridgeTransaction from "@ledgerhq/live-common/bridge/useBridgeTransaction";
 import { useAccountBridge } from "@ledgerhq/live-common/bridge/useAccountBridge";
+import useBridgeTransaction from "@ledgerhq/live-common/bridge/useBridgeTransaction";
 import { formatCurrencyUnit, getCurrencyColor } from "@ledgerhq/live-common/currencies/index";
 import type {
   CardanoAccount,
   CardanoDelegation,
-  TransactionStatus,
   Transaction as CardanoTransaction,
+  TransactionStatus,
 } from "@ledgerhq/live-common/families/cardano/types";
 import { Text, Box } from "@ledgerhq/native-ui";
 import { AccountLike } from "@ledgerhq/types-live";
@@ -101,9 +100,8 @@ export default function UndelegationSummary({ navigation, route }: Props) {
   const onBridgeErrorRetry = useCallback(() => {
     setBridgeErr(null);
     if (!transaction) return;
-    const bridge = getAccountBridge(account, parentAccount);
     setTransaction(bridge.updateTransaction(transaction, {}));
-  }, [setTransaction, account, parentAccount, transaction]);
+  }, [setTransaction, bridge, transaction]);
 
   const hasNotEnoughtBalanceError = bridgeError instanceof CardanoNotEnoughFunds;
 

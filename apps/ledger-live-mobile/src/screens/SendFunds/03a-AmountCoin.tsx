@@ -9,7 +9,7 @@ import { useTheme } from "@react-navigation/native";
 import { useAccountBridge } from "@ledgerhq/live-common/bridge/useAccountBridge";
 import type { Transaction } from "@ledgerhq/live-common/generated/types";
 import useBridgeTransaction from "@ledgerhq/live-common/bridge/useBridgeTransaction";
-import { getAccountBridge } from "@ledgerhq/live-common/bridge/index";
+import type { AccountLike } from "@ledgerhq/types-live";
 import { useDebounce } from "@ledgerhq/live-common/hooks/useDebounce";
 import { getAccountCurrency } from "@ledgerhq/live-common/account/helpers";
 import { ScreenName } from "~/const";
@@ -58,7 +58,7 @@ export default function SendAmountCoin({ navigation, route }: Props) {
   useEffect(() => {
     if (!account) return;
     let cancelled = false;
-    getAccountBridge(account, parentAccount)
+    bridge
       .estimateMaxSpendable({
         account,
         parentAccount,
@@ -72,12 +72,10 @@ export default function SendAmountCoin({ navigation, route }: Props) {
     return () => {
       cancelled = true;
     };
-  }, [account, parentAccount, debouncedTransaction]);
+  }, [account, parentAccount, debouncedTransaction, bridge]);
   const onChange = useCallback(
     (amount: BigNumber) => {
-      if (!amount.isNaN()) {
-        if (!account) return;
-        const bridge = getAccountBridge(account, parentAccount);
+      if (!amount.isNaN() && transaction) {
         setTransaction(
           bridge.updateTransaction(transaction, {
             amount,
@@ -85,19 +83,17 @@ export default function SendAmountCoin({ navigation, route }: Props) {
         );
       }
     },
-    [setTransaction, account, parentAccount, transaction],
+    [setTransaction, bridge, transaction],
   );
   const toggleUseAllAmount = useCallback(() => {
     if (!account || !transaction) return;
-    const bridge = getAccountBridge(account, parentAccount);
-
     setTransaction(
       bridge.updateTransaction(transaction, {
         amount: new BigNumber(0),
         useAllAmount: !transaction.useAllAmount,
       }),
     );
-  }, [setTransaction, account, parentAccount, transaction]);
+  }, [setTransaction, bridge, transaction, account]);
   const onContinue = useCallback(() => {
     if (!transaction) return;
     navigation.navigate(ScreenName.SendSummary, {
@@ -118,9 +114,8 @@ export default function SendAmountCoin({ navigation, route }: Props) {
   const onBridgeErrorRetry = useCallback(() => {
     setBridgeErr(null);
     if (!transaction) return;
-    const bridge = getAccountBridge(account, parentAccount);
     setTransaction(bridge.updateTransaction(transaction, {}));
-  }, [setTransaction, account, parentAccount, transaction]);
+  }, [setTransaction, bridge, transaction]);
   const blur = useCallback(() => Keyboard.dismiss(), []);
   const onMaxSpendableLearnMore = useCallback(() => Linking.openURL(urls.maxSpendable), []);
 

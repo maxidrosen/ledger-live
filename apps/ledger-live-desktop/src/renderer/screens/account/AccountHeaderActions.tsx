@@ -2,8 +2,8 @@ import {
   canSend,
   getAccountCurrency,
   getMainAccount,
-  isAccountEmpty,
 } from "@ledgerhq/live-common/account/index";
+import { isAccountEmpty } from "@ledgerhq/ledger-wallet-framework/account";
 import { useRampCatalog } from "@ledgerhq/live-common/platform/providers/RampCatalogProvider/useRampCatalog";
 
 import { Account, AccountLike } from "@ledgerhq/types-live";

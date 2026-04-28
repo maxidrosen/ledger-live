@@ -152,9 +152,9 @@ const Body = ({ stepId, params, onChangeStepId, onClose }: Props) => {
 
     // when changes, we set again
     if (patch.mode !== transaction.mode || patch.recipient) {
-      setTransaction(
-        getAccountBridge(account, parentAccount).updateTransaction(transaction, patch),
-      );
+      getAccountBridge(account, parentAccount).then(bridge => {
+        setTransaction(bridge.updateTransaction(transaction, patch));
+      });
     }
   }, [account, defaultBaker, stepId, params, parentAccount, setTransaction, transaction]);
 

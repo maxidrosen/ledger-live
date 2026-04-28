@@ -19,7 +19,7 @@ import { openModal } from "~/renderer/actions/modals";
 import { updateAccountWithUpdater } from "~/renderer/actions/accounts";
 import type { Currency } from "@ledgerhq/coin-bitcoin/wallet-btc/index";
 import type { ZcashAccount } from "@ledgerhq/live-common/families/bitcoin/types";
-import type { TokenAccount } from "@ledgerhq/types-live";
+import type { Account, TokenAccount } from "@ledgerhq/types-live";
 import { SYNC_TYPE_SHIELDED } from "@ledgerhq/types-live";
 import { ZcashPrivateInfo, ZcashSyncState } from "@ledgerhq/zcash-shielded/types";
 import { syncStateUpdater } from "./ZCashExportKeyFlowModal/sync";
@@ -306,21 +306,23 @@ const AccountBalanceSummaryFooter = ({ account }: Props) => {
       syncType: SYNC_TYPE_SHIELDED,
     };
 
-    const shieldedSync = getAccountBridge(account)
-      .sync(account, syncConfig)
-      .subscribe({
-        next(accountUpdater) {
-          dispatch(updateAccountWithUpdater(account.id, accountUpdater));
-        },
-        error(err) {
-          console.error(err);
-        },
-        complete() {
-          console.log(`Zcash shielded sync completed on account ${account.id}`);
-        },
-      });
+    getAccountBridge(account).then(bridge => {
+      const shieldedSync = bridge
+        .sync(account, syncConfig)
+        .subscribe({
+          next(accountUpdater: (a: Account) => Account) {
+            dispatch(updateAccountWithUpdater(account.id, accountUpdater));
+          },
+          error(err: Error) {
+            console.error(err);
+          },
+          complete() {
+            console.log(`Zcash shielded sync completed on account ${account.id}`);
+          },
+        });
 
-    dispatch(upsertShieldedSubscription({ accountId: account.id, subscription: shieldedSync }));
+      dispatch(upsertShieldedSubscription({ accountId: account.id, subscription: shieldedSync }));
+    });
   };
 
   const stopShieldedSync = () => {

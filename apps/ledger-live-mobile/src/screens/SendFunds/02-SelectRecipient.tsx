@@ -2,12 +2,12 @@ import { isConfirmedOperation } from "@ledgerhq/ledger-wallet-framework/operatio
 import { RecipientRequired } from "@ledgerhq/errors";
 import { Text } from "@ledgerhq/native-ui";
 import { getAccountCurrency, getMainAccount } from "@ledgerhq/live-common/account/helpers";
-import { getAccountBridge } from "@ledgerhq/live-common/bridge/index";
+import { useAccountBridge } from "@ledgerhq/live-common/bridge/useAccountBridge";
+import type { Transaction } from "@ledgerhq/live-common/generated/types";
 import {
   SyncOneAccountOnMount,
   SyncSkipUnderPriority,
 } from "@ledgerhq/live-common/bridge/react/index";
-import { useAccountBridge } from "@ledgerhq/live-common/bridge/useAccountBridge";
 import useBridgeTransaction from "@ledgerhq/live-common/bridge/useBridgeTransaction";
 import { useFeature } from "@ledgerhq/live-common/featureFlags/index";
 import { useDebounce } from "@ledgerhq/live-common/hooks/useDebounce";
@@ -68,7 +68,8 @@ export default function SendSelectRecipient({ route }: Props) {
   invariant(account, "account is missing");
 
   const mainAccount = getMainAccount(account, parentAccount);
-  const bridge = useAccountBridge(account, parentAccount);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const bridge = useAccountBridge<any>(account, parentAccount);
   const currencySettings = useCurrencySettingsForAccount(mainAccount);
   const { enabled: isDomainResolutionEnabled, params } = useFeature("domainInputResolution") ?? {};
   const isCurrencySupported =
@@ -129,7 +130,6 @@ export default function SendSelectRecipient({ route }: Props) {
   const onChangeText = useCallback(
     (recipient: string) => {
       if (!account) return;
-      const bridge = getAccountBridge(account, parentAccount);
       setTransaction(
         bridge.updateTransaction(transaction, {
           recipient,
@@ -137,17 +137,16 @@ export default function SendSelectRecipient({ route }: Props) {
       );
       setValue(recipient);
     },
-    [account, parentAccount, setTransaction, transaction],
+    [account, bridge, setTransaction, transaction],
   );
 
   const memoTag = useMemoTagInput(
     mainAccount.currency.family,
     useCallback(
       patch => {
-        const bridge = getAccountBridge(account, parentAccount);
         setTransaction(bridge.updateTransaction(transaction, patch(transaction)));
       },
-      [account, parentAccount, setTransaction, transaction],
+      [bridge, setTransaction, transaction],
     ),
   );
 
@@ -155,10 +154,9 @@ export default function SendSelectRecipient({ route }: Props) {
     mainAccount.currency.family,
     useCallback(
       patch => {
-        const bridge = getAccountBridge(account, parentAccount);
         setTransaction(bridge.updateTransaction(transaction, patch(transaction)));
       },
-      [account, parentAccount, setTransaction, transaction],
+      [bridge, setTransaction, transaction],
     ),
   );
 
@@ -175,9 +173,8 @@ export default function SendSelectRecipient({ route }: Props) {
 
   const onBridgeErrorRetry = useCallback(() => {
     setBridgeErr(null);
-    const bridge = getAccountBridge(account, parentAccount);
     setTransaction(bridge.updateTransaction(transaction, {}));
-  }, [setTransaction, account, parentAccount, transaction]);
+  }, [setTransaction, bridge, transaction]);
 
   const [memoTagDrawerState, setMemoTagDrawerState] = useState<MemoTagDrawerState>(
     MemoTagDrawerState.INITIAL,

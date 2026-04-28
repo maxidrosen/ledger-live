@@ -1,8 +1,9 @@
 import { useCallback, useMemo } from "react";
 import useBridgeTransaction from "@ledgerhq/live-common/bridge/useBridgeTransaction";
 import { getAccountBridge } from "@ledgerhq/live-common/bridge/index";
+import { useAccountBridgeOrNull } from "@ledgerhq/live-common/bridge/useAccountBridge";
 import { applyMemoToTransaction } from "@ledgerhq/live-common/bridge/descriptor/send/memo";
-import type { Account, AccountBridge, AccountLike } from "@ledgerhq/types-live";
+import type { Account, AccountLike } from "@ledgerhq/types-live";
 import type { Transaction } from "@ledgerhq/live-common/generated/types";
 import type {
   SendFlowTransactionState,
@@ -24,13 +25,9 @@ export function useSendFlowTransaction({
   account,
   parentAccount,
 }: UseSendFlowTransactionParams): UseSendFlowTransactionResult {
-  // useBridgeTransaction accepts null bridge; when account is null (no account selected yet),
-  // we pass null so useBridgeTransaction can handle it gracefully.
-  const bridge = useMemo(
-    () => (account ? (getAccountBridge(account, parentAccount) as AccountBridge<Transaction>) : null),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [account?.id, parentAccount?.id],
-  );
+  // useAccountBridgeOrNull resolves the async bridge via React's use(); when account is null,
+  // it returns null so useBridgeTransaction can handle the no-account state gracefully.
+  const bridge = useAccountBridgeOrNull<Transaction>(account, parentAccount);
 
   const {
     transaction,
@@ -46,10 +43,9 @@ export function useSendFlowTransaction({
   });
 
   const setRecipient = useCallback(
-    (recipient: RecipientData) => {
+    async (recipient: RecipientData) => {
       if (!account || !transaction) return;
-
-      const bridge = getAccountBridge(account, parentAccount);
+      const bridge = await getAccountBridge(account, parentAccount);
       const updates: Partial<Transaction> = { recipient: recipient.address };
 
       if (recipient.memo !== undefined) {

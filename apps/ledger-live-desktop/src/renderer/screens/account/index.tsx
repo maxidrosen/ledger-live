@@ -11,8 +11,8 @@ import { accountsSelector } from "~/renderer/reducers/accounts";
 import {
   findSubAccountById,
   getMainAccount,
-  isAccountEmpty,
 } from "@ledgerhq/live-common/account/index";
+import { isAccountEmpty } from "@ledgerhq/ledger-wallet-framework/account";
 import { findAccountById, findSubAccountByIdWithFallback } from "~/renderer/utils";
 import {
   setCountervalueFirst,
