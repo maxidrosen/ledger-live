@@ -7237,6 +7237,9 @@
       "title": "Session expired",
       "description": "The Concordium ID App session is no longer active. Please pair again."
     },
+    "ConcordiumAddressVerificationFailedError": {
+      "title": "Address verification failed"
+    },
     "StacksMemoTooLong": {
       "title": "Memo length is too long"
     },
