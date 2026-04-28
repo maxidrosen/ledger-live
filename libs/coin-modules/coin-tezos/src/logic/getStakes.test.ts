@@ -70,76 +70,143 @@ describe("getStakes", () => {
   });
 
   describe("delegated accounts", () => {
-    it("should return stake for delegated account", async () => {
-      const address = "tz1TzrmTBSuiVHV2VfMnGRMYvTEPCP42oSM8";
-      const delegateAddress = "tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx";
-      const balance = 5000000;
+    const address = "tz1TzrmTBSuiVHV2VfMnGRMYvTEPCP42oSM8";
+    const delegateAddress = "tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx";
 
-      mockGetAccountByAddress.mockResolvedValue({
-        type: "user",
+    function makeAccount(overrides: Record<string, unknown> = {}) {
+      return {
+        type: "user" as const,
         address,
         publicKey: "edpk...",
-        balance,
+        balance: 5000000,
         revealed: true,
         counter: 0,
-        delegate: {
-          alias: "Test Delegate",
-          address: delegateAddress,
-          active: true,
-        },
+        delegate: { alias: "Test Delegate", address: delegateAddress, active: true },
         delegationLevel: 100,
         delegationTime: "2021-01-01T00:00:00Z",
         numTransactions: 10,
         firstActivityTime: "2021-01-01T00:00:00Z",
-      });
+        ...overrides,
+      };
+    }
+
+    it("should return delegation stake for delegated account with no staking", async () => {
+      mockGetAccountByAddress.mockResolvedValue(makeAccount());
 
       const result = await api.getStakes(address);
 
       expect(result.items).toEqual([
-        expect.objectContaining({
-          uid: address,
+        {
+          uid: `delegation-${address}`,
           address,
           delegate: delegateAddress,
           state: "active",
           asset: { type: "native" },
-          amount: BigInt(balance),
-        }),
+          amount: 5000000n,
+        },
       ]);
     });
 
     it("should handle account with zero balance but delegation", async () => {
-      const address = "tz1ZeroBalanceAccount";
-      const delegateAddress = "tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx";
-
-      mockGetAccountByAddress.mockResolvedValue({
-        type: "user",
-        address,
-        publicKey: "edpk...",
-        balance: 0,
-        revealed: true,
-        counter: 0,
-        delegate: {
-          alias: "Test Delegate",
-          address: delegateAddress,
-          active: true,
-        },
-        delegationLevel: 100,
-        delegationTime: "2021-01-01T00:00:00Z",
-        numTransactions: 0,
-        firstActivityTime: "2021-01-01T00:00:00Z",
-      });
+      mockGetAccountByAddress.mockResolvedValue(makeAccount({ balance: 0 }));
 
       const result = await api.getStakes(address);
 
-      expect(result.items).toHaveLength(1);
-      expect(result.items[0]).toMatchObject({
-        uid: address,
-        address,
-        delegate: delegateAddress,
-        state: "active",
-        asset: { type: "native" },
-        amount: BigInt(0),
-      });
+      expect(result.items).toEqual([
+        {
+          uid: `delegation-${address}`,
+          address,
+          delegate: delegateAddress,
+          state: "active",
+          asset: { type: "native" },
+          amount: 0n,
+        },
+      ]);
+    });
+
+    it("should return delegation + stake when stakedBalance > 0", async () => {
+      mockGetAccountByAddress.mockResolvedValue(makeAccount({ balance: 100, stakedBalance: 30 }));
+
+      const result = await api.getStakes(address);
+
+      expect(result.items).toEqual([
+        {
+          uid: `delegation-${address}`,
+          address,
+          delegate: delegateAddress,
+          state: "active",
+          asset: { type: "native" },
+          amount: 70n,
+        },
+        {
+          uid: `stake-${address}`,
+          address,
+          delegate: delegateAddress,
+          state: "active",
+          asset: { type: "native" },
+          amount: 30n,
+        },
+      ]);
+    });
+
+    it("should return delegation + unstaking when unstakedBalance > 0", async () => {
+      mockGetAccountByAddress.mockResolvedValue(makeAccount({ balance: 100, unstakedBalance: 10 }));
+
+      const result = await api.getStakes(address);
+
+      expect(result.items).toEqual([
+        {
+          uid: `delegation-${address}`,
+          address,
+          delegate: delegateAddress,
+          state: "active",
+          asset: { type: "native" },
+          amount: 100n,
+        },
+        {
+          uid: `unstaking-${address}`,
+          address,
+          delegate: delegateAddress,
+          state: "deactivating",
+          asset: { type: "native" },
+          amount: 10n,
+        },
+      ]);
+    });
+
+    it("should return all three positions when delegate, stakedBalance and unstakedBalance are set", async () => {
+      mockGetAccountByAddress.mockResolvedValue(
+        makeAccount({ balance: 100, stakedBalance: 30, unstakedBalance: 10 }),
+      );
+
+      const result = await api.getStakes(address);
+
+      expect(result.items).toEqual([
+        {
+          uid: `delegation-${address}`,
+          address,
+          delegate: delegateAddress,
+          state: "active",
+          asset: { type: "native" },
+          amount: 70n,
+        },
+        {
+          uid: `stake-${address}`,
+          address,
+          delegate: delegateAddress,
+          state: "active",
+          asset: { type: "native" },
+          amount: 30n,
+        },
+        {
+          uid: `unstaking-${address}`,
+          address,
+          delegate: delegateAddress,
+          state: "deactivating",
+          asset: { type: "native" },
+          amount: 10n,
+        },
+      ]);
     });
   });
 });
