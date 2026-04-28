@@ -1,4 +1,5 @@
 import assert, { fail } from "assert";
+import { NotEnoughBalanceFees } from "@ledgerhq/errors";
 import { SuiJsonRpcClient } from "@mysten/sui/jsonRpc";
 import type {
   BalanceChange,
@@ -11,7 +12,6 @@ import { Transaction } from "@mysten/sui/transactions";
 import { BigNumber } from "bignumber.js";
 import coinConfig from "../config";
 import * as sdkOriginal from "./sdk";
-import { NotEnoughBalanceFees } from "@ledgerhq/errors";
 
 // Create a mutable copy of the sdk module for mocking specific functions
 const mockLoadOperations = jest.fn<
