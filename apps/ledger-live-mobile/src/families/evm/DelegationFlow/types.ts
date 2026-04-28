@@ -1,5 +1,8 @@
-import type { Transaction, TransactionStatus } from "@ledgerhq/coin-evm/types/index";
-import type { StakingValidatorItem } from "@ledgerhq/coin-evm/types/index";
+import type {
+  Transaction,
+  TransactionStatus,
+  StakingValidatorItem,
+} from "@ledgerhq/coin-evm/types/index";
 import type { Operation } from "@ledgerhq/types-live";
 import type { Device } from "@ledgerhq/live-common/hw/actions/types";
 import { ParamListBase, RouteProp } from "@react-navigation/native";
