@@ -24,6 +24,7 @@ import { SwapNavigatorParamList } from "./types/SwapNavigator";
 import { NavigationHeaderBackButton } from "../NavigationHeaderBackButton";
 import SwapCustomError from "~/screens/Swap/SubScreens/SwapCustomError";
 import { useWalletFeaturesConfig } from "@ledgerhq/live-common/featureFlags/index";
+import { useNotificationsContext } from "LLM/features/NotificationsPrompt";
 
 // Constants for tracking sources
 const TRACKING_SOURCES = {
@@ -85,6 +86,7 @@ export default function SwapNavigator(
   const noNanoBuyNanoWallScreenOptions = useNoNanoBuyNanoWallScreenOptions();
   const track = useTrack();
   const navigation = useNavigation<StackNavigatorNavigation<SwapNavigatorParamList>>();
+  const { notifyFlowCompleted } = useNotificationsContext();
   const { isEnabled: isLwm40Enabled, shouldDisplayWallet40MainNav } =
     useWalletFeaturesConfig("mobile");
 
@@ -180,6 +182,11 @@ export default function SwapNavigator(
         options={{
           headerTitle: t("transfer.swap.title"),
           headerLeft: NullHeader,
+        }}
+        listeners={{
+          beforeRemove: () => {
+            notifyFlowCompleted("swap");
+          },
         }}
       />
 
