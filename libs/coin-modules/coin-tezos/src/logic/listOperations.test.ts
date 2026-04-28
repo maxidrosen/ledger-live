@@ -478,7 +478,7 @@ describe("listOperations", () => {
     const row = results[0];
     expect(row).toBeDefined();
     expect(row!.type).toBe("IN");
-    expect(row!.details.ledgerOpType).toBeUndefined();
+    expect(row!.details!.ledgerOpType).toBeUndefined();
   });
 
   it("normalizes self-transfer as FEES with ledgerOpType FEES", async () => {
@@ -496,7 +496,7 @@ describe("listOperations", () => {
     const selfRow = results[0];
     expect(selfRow).toBeDefined();
     expect(selfRow!.type).toBe("FEES");
-    expect(selfRow!.details.ledgerOpType).toBe("FEES");
+    expect(selfRow!.details!.ledgerOpType).toBe("FEES");
   });
 
   it("normalizes zero-amount transfer as FEES", async () => {
@@ -514,7 +514,7 @@ describe("listOperations", () => {
     const zeroRow = results[0];
     expect(zeroRow).toBeDefined();
     expect(zeroRow!.type).toBe("FEES");
-    expect(zeroRow!.details.ledgerOpType).toBe("FEES");
+    expect(zeroRow!.details!.ledgerOpType).toBe("FEES");
   });
 
   it("applies limit to native operations returned from the explorer", async () => {
@@ -550,7 +550,7 @@ describe("listOperations", () => {
     const tokenOut = results.find(o => o.asset.type === "fa2");
     expect(tokenOut).toBeDefined();
     expect(tokenOut!.type).toBe("OUT");
-    expect(tokenOut!.details.ledgerOpType).toBe("OUT");
+    expect(tokenOut!.details!.ledgerOpType).toBe("OUT");
   });
 
   it("FA2 self-transfer (same from and to as account) is typed FEES", async () => {
@@ -575,7 +575,7 @@ describe("listOperations", () => {
     const tokenSelf = results.find(o => o.asset.type === "fa2");
     expect(tokenSelf).toBeDefined();
     expect(tokenSelf!.type).toBe("FEES");
-    expect(tokenSelf!.details.ledgerOpType).toBe("FEES");
+    expect(tokenSelf!.details!.ledgerOpType).toBe("FEES");
   });
 
   it("FA2 transfer without parent transaction omits fees and falls back to transfer.block hash", async () => {
