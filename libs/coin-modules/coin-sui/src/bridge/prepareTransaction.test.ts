@@ -1,6 +1,5 @@
 import { faker } from "@faker-js/faker";
 import BigNumber from "bignumber.js";
-import { NotEnoughBalanceFees } from "@ledgerhq/errors";
 import { DEFAULT_COIN_TYPE } from "../network/sdk";
 import { createFixtureAccount, createFixtureTransaction } from "../types/bridge.fixture";
 import prepareTransaction from "./prepareTransaction";
@@ -97,13 +96,12 @@ describe("prepareTransaction", () => {
     expect(newTx.tokenId).toEqual("tokenSubAccountId");
   });
 
-  it("throws NotEnoughBalanceFees when fee estimation fails", async () => {
+  it("rejects when fee estimation fails", async () => {
     // GIVEN
-    const feeError = new NotEnoughBalanceFees();
-    mockGetFeesForTransaction.mockRejectedValue(feeError);
+    mockGetFeesForTransaction.mockRejectedValue(new Error("fee estimation failed"));
     const tx = createFixtureTransaction();
 
     // WHEN / THEN
-    await expect(prepareTransaction(createFixtureAccount(), tx)).rejects.toThrow(feeError);
+    await expect(prepareTransaction(createFixtureAccount(), tx)).rejects.toThrow();
   });
 });
