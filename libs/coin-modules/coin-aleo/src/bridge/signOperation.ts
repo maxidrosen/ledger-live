@@ -19,9 +19,11 @@ import {
   fromHex,
   isPrivateTransaction,
   resolveConfig,
+  selectPrivateTransferType,
   toHex,
 } from "../logic/utils";
 import { buildOptimisticOperation } from "./buildOptimisticOperation";
+import { apiClient } from "../network/api";
 
 interface SigningParams {
   account: AleoAccount;
@@ -128,45 +130,99 @@ export const buildSignOperation =
             max_priority_fee: priorityFee.toString(),
           };
 
-          const craftedRequest = await craftTransaction({
-            currency: account.currency,
-            viewKey,
-            feeConfiguration,
-            txIntent: createTransactionIntent({ account, transaction }),
-          });
+          if (
+            transaction.properties?.amountRecordCommitments &&
+            transaction.properties.amountRecordCommitments.length > 1
+          ) {
+            const unspentRecords = account.aleoResources?.unspentPrivateRecords ?? [];
+            const commitments = transaction.properties.amountRecordCommitments;
+            const records = commitments.map(commitment => {
+              const record = unspentRecords.find(r => r.commitment === commitment);
+              if (!record) {
+                throw new Error(`Could not find record for commitment: ${commitment}`);
+              }
+              return record.decryptedData;
+            });
 
-          const request = fromHex<PreparedRequestResponse>(craftedRequest.transaction);
+            const intentResponse = await apiClient.createTransferIntent({
+              intent: {
+                type: selectPrivateTransferType(records.length),
+                amount: transaction.amount.toString(),
+                to: transaction.recipient,
+                records,
+              },
+              viewKey,
+              fee: {
+                max_base_fee: baseFee.toString(),
+                max_priority_fee: priorityFee.toString(),
+                function_name: "fee_private",
+              },
+            });
 
-          const signedTx = await signerContext(deviceId, signer =>
-            executeSigningFlow(signer, {
+            console.log("DEBUG2 intentResponse", intentResponse);
+
+            const authorizationResponse = await apiClient.createAuthorization({
+              request: intentResponse,
+              signatures: "",
+              viewKey,
+              tlvVersion: 1,
+            });
+
+            const signedTx = toHex({
+              authorization: JSON.stringify(authorizationResponse.authorization),
+              feeAuthorization: null,
+            } satisfies SignedAleoTransaction);
+
+            o.next({ type: "device-signature-granted" });
+
+            const operation = buildOptimisticOperation({ account, transaction });
+
+            o.next({
+              type: "signed",
+              signedOperation: { operation, signature: signedTx },
+            });
+            o.complete();
+          } else {
+            const craftedRequest = await craftTransaction({
+              currency: account.currency,
+              viewKey,
+              feeConfiguration,
+              txIntent: createTransactionIntent({ account, transaction }),
+            });
+
+            const request = fromHex<PreparedRequestResponse>(craftedRequest.transaction);
+
+            const signedTx = await signerContext(deviceId, signer =>
+              executeSigningFlow(signer, {
+                account,
+                transaction,
+                request,
+                config,
+                baseFee,
+                priorityFee,
+                viewKey,
+              }),
+            );
+
+            o.next({
+              type: "device-signature-granted",
+            });
+
+            const operation = buildOptimisticOperation({
               account,
               transaction,
-              request,
-              config,
-              baseFee,
-              priorityFee,
-              viewKey,
-            }),
-          );
+            });
 
-          o.next({
-            type: "device-signature-granted",
-          });
+            o.next({
+              type: "signed",
+              signedOperation: {
+                operation,
+                signature: signedTx,
+              },
+            });
 
-          const operation = buildOptimisticOperation({
-            account,
-            transaction,
-          });
-
-          o.next({
-            type: "signed",
-            signedOperation: {
-              operation,
-              signature: signedTx,
-            },
-          });
-
-          o.complete();
+            o.complete();
+          }
         } catch (err) {
           o.error(err);
         }

@@ -29,15 +29,19 @@ export const prepareTransaction: AccountBridge<
       unspentRecords: unspentPrivateRecords,
       targetAmount: transaction.useAllAmount ? null : transaction.amount,
     });
+    // MOCKED LOGIC, SHOLD BE REPLACED WITH PROPER ALGORITHM TO SELECT BEST RECORDS BASED ON THE TRANSACTION CONTEXT
+    // const selectedAmountRecords = [...unspentPrivateRecords]
+    //   .sort((a, b) => new BigNumber(b.microcredits).minus(new BigNumber(a.microcredits)).toNumber())
+    //   .slice(0, 7);
 
     const selectedAmountRecordCommitments = selectedAmountRecords.map(record => record.commitment);
 
     const nextFeeRecordCommitment = !config.isFeeSponsored
-      ? (findBestRecordForFee({
+      ? findBestRecordForFee({
           unspentRecords: unspentPrivateRecords,
           selectedAmountRecordCommitments,
           targetFee: estimatedFees,
-        })?.commitment ?? transaction.properties.feeRecordCommitment)
+        })?.commitment ?? transaction.properties.feeRecordCommitment
       : transaction.properties.feeRecordCommitment;
 
     const transactionWithAutoSelectedRecords = updateTransaction(transaction, {

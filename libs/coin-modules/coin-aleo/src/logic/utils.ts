@@ -722,3 +722,11 @@ export function extractViewKey(account: AleoAccount): string {
   invariant(viewKey, `aleo: view key is missing in ${account.freshAddress} account`);
   return viewKey;
 }
+
+export function selectPrivateTransferType(recordCount: number): string {
+  invariant(
+    recordCount >= 2 && recordCount <= 14,
+    `aleo: record count ${recordCount} is out of supported range (2–14)`,
+  );
+  return `transfer_private${recordCount}`;
+}
