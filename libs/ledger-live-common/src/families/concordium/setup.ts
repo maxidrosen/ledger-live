@@ -16,12 +16,7 @@ const createSigner: CreateSigner<ConcordiumSigner> = (transport: Transport): Con
   if (!isDmkTransport(transport)) {
     throw new Error("Concordium requires DMK transport");
   }
-  // live-signer-concordium pulls in @ledgerhq/device-management-kit ^1.3.0
-  // (peer of the released signer-kit-concordium 0.3.0), while live-common
-  // resolves DMK from the catalog (1.2.0). Both versions expose the same
-  // runtime API surface used here, but TS treats them as nominally distinct.
-  const dmk = transport.dmk as unknown as ConstructorParameters<typeof DmkSignerConcordium>[0];
-  return new DmkSignerConcordium(dmk, transport.sessionId);
+  return new DmkSignerConcordium(transport.dmk, transport.sessionId);
 };
 
 const getCurrencyConfig = (currencyId?: string) => {

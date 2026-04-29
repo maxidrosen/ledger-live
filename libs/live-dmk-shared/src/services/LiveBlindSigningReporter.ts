@@ -1,5 +1,5 @@
 import { type Either, Right } from "purify-ts";
-import { noopLoggerFactory } from "@ledgerhq/device-management-kit";
+import { DmkNetworkClient, noopLoggerFactory } from "@ledgerhq/device-management-kit";
 import {
   type BlindSigningPlatform,
   type BlindSigningReporter,
@@ -81,11 +81,14 @@ export function buildDefaultHttpBlindSigningReporter(
   appSource = "ledger-wallet",
 ): BlindSigningReporter {
   return new DefaultBlindSigningReporter(
-    new HttpBlindSigningReporterDatasource({
-      ...DEFAULT_CONFIG,
-      appSource,
-      originToken,
-      loggerFactory: noopLoggerFactory,
-    }),
+    new HttpBlindSigningReporterDatasource(
+      {
+        ...DEFAULT_CONFIG,
+        appSource,
+        originToken,
+        loggerFactory: noopLoggerFactory,
+      },
+      new DmkNetworkClient(),
+    ),
   );
 }
