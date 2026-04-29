@@ -3,6 +3,9 @@ name: Build Windows Installer
 on:
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     name: Build Windows .exe
@@ -62,10 +65,36 @@ jobs:
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: "false"
 
-      - name: Upload Windows installer
+      - name: Find installer path
+        id: find-exe
+        shell: bash
+        run: |
+          EXE=$(ls apps/ledger-live-desktop/dist/*.exe | head -1)
+          echo "EXE_PATH=$EXE" >> $GITHUB_OUTPUT
+          echo "EXE_NAME=$(basename $EXE)" >> $GITHUB_OUTPUT
+
+      - name: Upload Windows installer artifact
         uses: actions/upload-artifact@v4
         with:
           name: ledger-live-desktop-windows-installer
           path: apps/ledger-live-desktop/dist/*.exe
           if-no-files-found: error
           retention-days: 30
+
+      - name: Delete existing demo-build release (if any)
+        shell: bash
+        run: |
+          gh release delete demo-build --yes --cleanup-tag 2>/dev/null || true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create GitHub Release and upload .exe
+        shell: bash
+        run: |
+          gh release create demo-build \
+            --title "Ledger Live Desktop — Demo Build" \
+            --notes "Windows installer built automatically from the \`develop\` branch. Trigger: manual workflow dispatch." \
+            --prerelease \
+            "${{ steps.find-exe.outputs.EXE_PATH }}#${{ steps.find-exe.outputs.EXE_NAME }}"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
