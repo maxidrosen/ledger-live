@@ -7,6 +7,7 @@ import { createGeneratedHelpers, registerGeneratedStore } from '@bunli/core'
 import Account from '../src/commands/account/index.js'
 import Balances from '../src/commands/balances.js'
 import Discover from '../src/commands/account/discover.js'
+import Execute from '../src/commands/swap/execute.js'
 import FreshAddress from '../src/commands/account/fresh-address.js'
 import Operations from '../src/commands/operations.js'
 import Quote from '../src/commands/swap/quote.js'
@@ -18,13 +19,14 @@ import Swap from '../src/commands/swap/index.js'
 import View from '../src/commands/session/view.js'
 
 // Narrow list of command names to avoid typeof-cycles in types
-const names = ['account', 'balances', 'discover', 'fresh-address', 'operations', 'quote', 'receive', 'reset', 'send', 'session', 'swap', 'view'] as const
+const names = ['account', 'balances', 'discover', 'execute', 'fresh-address', 'operations', 'quote', 'receive', 'reset', 'send', 'session', 'swap', 'view'] as const
 type GeneratedNames = typeof names[number]
 
 const modules: Record<GeneratedNames, Command<any>> = {
   'account': Account,
   'balances': Balances,
   'discover': Discover,
+  'execute': Execute,
   'fresh-address': FreshAddress,
   'operations': Operations,
   'quote': Quote,
@@ -79,6 +81,19 @@ const metadata: Record<GeneratedNames, GeneratedCommandMeta> = {
         'output': { type: 'OutputFormatSchema.default', required: true, hasDefault: true, default: "human", description: 'Output format: human (default) or json', schema: {"type":"zod","method":"default","args":[{"type":"literal","value":"human"}]}, validator: '(val) => true' }
       },
       path: './src/commands/account/discover'
+    },
+  'execute': {
+      name: 'execute',
+      description: 'Swap flow with Ledger device + API pipeline (nonce → payload → complete exchange → sign/broadcast).',
+      options: {
+        'provider': { type: 'z.string.min', required: true, hasDefault: false, description: 'Swap provider name, e.g. changelly', short: 'p', min: 1, minLength: 1, schema: {"type":"zod","method":"min","args":[{"type":"unknown","raw":{"type":"NumericLiteral","start":1012,"end":1013,"loc":{"start":{"line":22,"column":36,"index":1012},"end":{"line":22,"column":37,"index":1013}},"extra":{"rawValue":1,"raw":"1"},"value":1}},{"type":"literal","value":"Provider is required (--provider <name>)"}]}, validator: '(val) => true' },
+        'amount': { type: 'z.string.min', required: true, hasDefault: false, description: 'Swap source amount in human units (ignored if --amount-atomic is set)', short: 'a', min: 1, minLength: 1, schema: {"type":"zod","method":"min","args":[{"type":"unknown","raw":{"type":"NumericLiteral","start":1179,"end":1180,"loc":{"start":{"line":26,"column":34,"index":1179},"end":{"line":26,"column":35,"index":1180}},"extra":{"rawValue":1,"raw":"1"},"value":1}},{"type":"literal","value":"Amount is required (--amount <value>)"}]}, validator: '(val) => true' },
+        'to-account': { type: 'z.string.min.optional', required: false, hasDefault: false, description: 'Destination account descriptor (required for full pipeline)', min: 1, minLength: 1, schema: {"type":"zod","method":"optional","args":[]}, validator: '(val) => true' },
+        'account': { type: 'z.string.min.optional', required: false, hasDefault: false, description: 'Account descriptor or session label (e.g. ethereum-1). Can also be the first positional arg.', short: 'a', min: 1, minLength: 1, schema: {"type":"zod","method":"optional","args":[]}, validator: '(val) => true' },
+        'fee-strategy': { type: 'z.enum.default', required: true, hasDefault: true, default: "medium", description: 'Fee strategy for the refund-chain transaction (full pipeline)', enumValues: ["slow","medium","fast"], schema: {"type":"zod","method":"default","args":[{"type":"literal","value":"medium"}]}, validator: '(val) => true' },
+        'output': { type: 'OutputFormatSchema.default', required: true, hasDefault: true, default: "human", description: 'Output format: human (default) or json', schema: {"type":"zod","method":"default","args":[{"type":"literal","value":"human"}]}, validator: '(val) => true' }
+      },
+      path: './src/commands/swap/execute'
     },
   'fresh-address': {
       name: 'fresh-address',
@@ -177,6 +192,19 @@ const metadata: Record<GeneratedNames, GeneratedCommandMeta> = {
       name: 'swap',
       description: 'Swap-related commands',
       commands: [
+        {
+          name: 'execute',
+          description: 'Swap flow with Ledger device + API pipeline (nonce → payload → complete exchange → sign/broadcast).',
+          options: {
+            'provider': { type: 'z.string.min', required: true, hasDefault: false, description: 'Swap provider name, e.g. changelly', short: 'p', min: 1, minLength: 1, schema: {"type":"zod","method":"min","args":[{"type":"unknown","raw":{"type":"NumericLiteral","start":1012,"end":1013,"loc":{"start":{"line":22,"column":36,"index":1012},"end":{"line":22,"column":37,"index":1013}},"extra":{"rawValue":1,"raw":"1"},"value":1}},{"type":"literal","value":"Provider is required (--provider <name>)"}]}, validator: '(val) => true' },
+            'amount': { type: 'z.string.min', required: true, hasDefault: false, description: 'Swap source amount in human units (ignored if --amount-atomic is set)', short: 'a', min: 1, minLength: 1, schema: {"type":"zod","method":"min","args":[{"type":"unknown","raw":{"type":"NumericLiteral","start":1179,"end":1180,"loc":{"start":{"line":26,"column":34,"index":1179},"end":{"line":26,"column":35,"index":1180}},"extra":{"rawValue":1,"raw":"1"},"value":1}},{"type":"literal","value":"Amount is required (--amount <value>)"}]}, validator: '(val) => true' },
+            'to-account': { type: 'z.string.min.optional', required: false, hasDefault: false, description: 'Destination account descriptor (required for full pipeline)', min: 1, minLength: 1, schema: {"type":"zod","method":"optional","args":[]}, validator: '(val) => true' },
+            'account': { type: 'z.string.min.optional', required: false, hasDefault: false, description: 'Account descriptor or session label (e.g. ethereum-1). Can also be the first positional arg.', short: 'a', min: 1, minLength: 1, schema: {"type":"zod","method":"optional","args":[]}, validator: '(val) => true' },
+            'fee-strategy': { type: 'z.enum.default', required: true, hasDefault: true, default: "medium", description: 'Fee strategy for the refund-chain transaction (full pipeline)', enumValues: ["slow","medium","fast"], schema: {"type":"zod","method":"default","args":[{"type":"literal","value":"medium"}]}, validator: '(val) => true' },
+            'output': { type: 'OutputFormatSchema.default', required: true, hasDefault: true, default: "human", description: 'Output format: human (default) or json', schema: {"type":"zod","method":"default","args":[{"type":"literal","value":"human"}]}, validator: '(val) => true' }
+          },
+          path: './src/commands/swap/execute'
+        },
         {
           name: 'quote',
           description: 'Fetch swap quotes',
