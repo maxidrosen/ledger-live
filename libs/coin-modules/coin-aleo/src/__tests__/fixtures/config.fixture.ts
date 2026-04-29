@@ -8,6 +8,7 @@ export const getMockedConfig = (networkType: "mainnet" | "testnet"): AleoCoinCon
       node: "https://node.example.com",
       sdk: "https://sdk.example.com",
     },
+    recordPickingStrategy: "manual",
     feeByTransactionType: {
       [TRANSACTION_TYPE.TRANSFER_PUBLIC]: 34060,
       [TRANSACTION_TYPE.TRANSFER_PRIVATE]: 2308,

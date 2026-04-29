@@ -36,6 +36,7 @@ describe("craftTransaction", () => {
         node: getEnv("ALEO_TESTNET_NODE_ENDPOINT"),
         sdk: getEnv("ALEO_TESTNET_SDK_ENDPOINT"),
       },
+      recordPickingStrategy: "manual",
       feeByTransactionType: {
         [TRANSACTION_TYPE.TRANSFER_PUBLIC]: 34060,
         [TRANSACTION_TYPE.TRANSFER_PRIVATE]: 2308,

@@ -3,6 +3,7 @@ import type { TransactionType } from "./logic";
 
 export type AleoConfig = {
   networkType: "mainnet" | "testnet";
+  recordPickingStrategy: "manual" | "auto";
   apiUrls: {
     node: string;
     sdk: string;

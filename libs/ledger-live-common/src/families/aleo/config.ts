@@ -28,6 +28,8 @@ const IS_FEE_SPONSORED = true;
  */
 const USE_ENCRYPTED_PROVE = true;
 
+const RECORD_PICKING_STRATEGY: "manual" | "auto" = "manual";
+
 export const aleoConfig: Record<string, ConfigInfo> = {
   config_currency_aleo: {
     type: "object",
@@ -40,6 +42,7 @@ export const aleoConfig: Record<string, ConfigInfo> = {
         node: getEnv("ALEO_MAINNET_NODE_ENDPOINT"),
         sdk: getEnv("ALEO_MAINNET_SDK_ENDPOINT"),
       },
+      recordPickingStrategy: RECORD_PICKING_STRATEGY,
       feeByTransactionType: DEFAULT_FEE_BY_TRANSACTION_TYPE,
       feeSafetyMultiplier: DEFAULT_FEE_SAFETY_MULTIPLIER,
       isFeeSponsored: IS_FEE_SPONSORED,
@@ -57,6 +60,7 @@ export const aleoConfig: Record<string, ConfigInfo> = {
         node: getEnv("ALEO_TESTNET_NODE_ENDPOINT"),
         sdk: getEnv("ALEO_TESTNET_SDK_ENDPOINT"),
       },
+      recordPickingStrategy: RECORD_PICKING_STRATEGY,
       feeByTransactionType: DEFAULT_FEE_BY_TRANSACTION_TYPE,
       feeSafetyMultiplier: DEFAULT_FEE_SAFETY_MULTIPLIER,
       isFeeSponsored: IS_FEE_SPONSORED,
