@@ -1,15 +1,9 @@
 import { option } from "@bunli/core";
-import { z } from "zod";
 import { OutputFormatSchema, parseAccountDescriptor } from "../wallet/models";
 import type { AccountDescriptor } from "../wallet/models";
 import { parseV1 } from "../shared/accountDescriptor";
 import type { AccountDescriptorV1 } from "../shared/accountDescriptor";
 import { Session } from "../session/session-store";
-
-export const accountOption = option(z.string().min(1).optional(), {
-  description: "Account descriptor or session label (e.g. ethereum-1). Can also be the first positional arg.",
-  short: "a",
-});
 
 export const outputOption = option(OutputFormatSchema.default("human"), {
   description: "Output format: human (default) or json",

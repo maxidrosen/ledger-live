@@ -22,6 +22,7 @@ import {
 } from "./commands/swap/quote-shared";
 import type { Balance, Operation, DiscoveredAccount, SendEvent } from "./wallet/models";
 import type { SessionEntry } from "./session/session-store";
+import type { SwapPayloadResponse } from "@ledgerhq/live-common/lib-es/exchange/swap/types";
 
 // ---------------------------------------------------------------------------
 // Context & interface
@@ -93,6 +94,27 @@ export interface CommandOutput {
    * Human: error lines + exit 1.
    */
   swapQuotesUnavailable(message: string, errors: SwapQuoteProviderError[]): never;
+
+  /** Print one progress line for swap execute long-running steps. */
+  swapExecuteProgress(line: string): void;
+  /** Print payload-only swap execute result. */
+  swapExecutePayloadResult(args: {
+    provider: string;
+    amount: string;
+    transactionId?: string;
+    payload: SwapPayloadResponse;
+  }): void;
+  /** Print full-pipeline swap execute result. */
+  swapExecuteFullResult(args: {
+    provider: string;
+    amount: string;
+    transactionId: string;
+    payload: SwapPayloadResponse;
+    operationHash?: string;
+    swapId?: string;
+    amountExpectedTo?: string;
+    magnitudeAwareRate?: string;
+  }): void;
 }
 
 // ---------------------------------------------------------------------------
@@ -249,6 +271,50 @@ class HumanCommandOutput implements CommandOutput {
     }
     throw new CliProcessExitError(1);
   }
+
+  swapExecuteProgress(line: string): void {
+    process.stderr.write(`${line}\n`);
+  }
+
+  swapExecutePayloadResult(args: {
+    provider: string;
+    amount: string;
+    transactionId?: string;
+    payload: SwapPayloadResponse;
+  }): void {
+    writeStdout(`${colors.bold("Provider:")} ${args.provider}\n`);
+    writeStdout(`${colors.bold("Amount:")} ${args.amount}\n`);
+    if (args.transactionId) {
+      writeStdout(`${colors.bold("Device transaction id:")} ${args.transactionId}\n`);
+    }
+    writeStdout(`${colors.bold("Swap ID:")} ${args.payload.swapId ?? "(none)"}\n`);
+    writeStdout(`${colors.bold("Payin address:")} ${args.payload.payinAddress}\n`);
+  }
+
+  swapExecuteFullResult(args: {
+    provider: string;
+    amount: string;
+    transactionId: string;
+    payload: SwapPayloadResponse;
+    operationHash?: string;
+    swapId?: string;
+    amountExpectedTo?: string;
+    magnitudeAwareRate?: string;
+    dryRun: boolean;
+  }): void {
+    this.swapExecutePayloadResult(args);
+    if (args.amountExpectedTo) {
+      writeStdout(
+        `${colors.bold("Amount expected to (decoded payload):")} ${args.amountExpectedTo}\n`,
+      );
+    }
+    if (args.operationHash) {
+      writeStdout(`${colors.bold("Operation hash:")} ${args.operationHash}\n`);
+    }
+    if (args.dryRun) {
+      writeStdout(colors.dim("Dry run: transaction was not broadcast.\n"));
+    }
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -331,7 +397,9 @@ class JsonCommandOutput implements CommandOutput {
     writeStdout(this._envelope({ accounts }));
   }
 
-  sessionSaved(_added: number): void { /* noop */ }
+  sessionSaved(_added: number): void {
+    /* noop */
+  }
 
   sessionReset(count: number): void {
     writeStdout(this._envelope({ removed: count }));
@@ -370,6 +438,52 @@ class JsonCommandOutput implements CommandOutput {
   swapQuotesUnavailable(message: string, _errors: SwapQuoteProviderError[]): never {
     writeStdout(this._errorEnvelope(message));
     throw new CliProcessExitError(1);
+  }
+
+  swapExecuteProgress(_line: string): void {
+    // Keep JSON mode stdout clean and machine-readable.
+  }
+
+  swapExecutePayloadResult(args: {
+    provider: string;
+    amount: string;
+    transactionId?: string;
+    payload: SwapPayloadResponse;
+  }): void {
+    writeStdout(
+      this._envelope({
+        provider: args.provider,
+        amount: args.amount,
+        transactionId: args.transactionId,
+        payload: args.payload,
+      }),
+    );
+  }
+
+  swapExecuteFullResult(args: {
+    provider: string;
+    amount: string;
+    transactionId: string;
+    payload: SwapPayloadResponse;
+    operationHash?: string;
+    swapId?: string;
+    amountExpectedTo?: string;
+    magnitudeAwareRate?: string;
+    dryRun: boolean;
+  }): void {
+    writeStdout(
+      this._envelope({
+        provider: args.provider,
+        amount: args.amount,
+        transactionId: args.transactionId,
+        payload: args.payload,
+        operationHash: args.operationHash,
+        swapId: args.swapId,
+        amountExpectedTo: args.amountExpectedTo,
+        magnitudeAwareRate: args.magnitudeAwareRate,
+        dry_run: args.dryRun,
+      }),
+    );
   }
 }
 
