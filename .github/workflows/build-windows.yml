@@ -48,7 +48,7 @@ jobs:
 
       - name: Generate families dispatch
         working-directory: apps/ledger-live-desktop
-        run: node -e "require('child_process').execSync('node node_modules/.bin/zx ./scripts/sync-families-dispatch.mjs', {stdio:'inherit'})"
+        run: pnpm exec zx ./scripts/sync-families-dispatch.mjs
 
       - name: Create release notes placeholder
         working-directory: apps/ledger-live-desktop
