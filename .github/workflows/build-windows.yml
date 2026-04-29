@@ -1,0 +1,71 @@
+name: Build Windows Installer
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build Windows .exe
+    runs-on: windows-latest
+    timeout-minutes: 90
+
+    env:
+      NODE_OPTIONS: "--max-old-space-size=7168"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: Install pnpm 10.24.0
+        uses: pnpm/action-setup@v4
+        with:
+          version: "10.24.0"
+
+      - name: Get pnpm store path
+        id: pnpm-store
+        shell: bash
+        run: echo "STORE=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-store.outputs.STORE }}
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile --ignore-scripts
+
+      - name: Generate families dispatch
+        working-directory: apps/ledger-live-desktop
+        run: node -e "require('child_process').execSync('node node_modules/.bin/zx ./scripts/sync-families-dispatch.mjs', {stdio:'inherit'})"
+
+      - name: Create release notes placeholder
+        working-directory: apps/ledger-live-desktop
+        shell: bash
+        run: |
+          if [ ! -f release-notes.json ]; then
+            echo "[]" > release-notes.json
+          fi
+
+      - name: Build workspace dependencies
+        run: pnpm exec nx run ledger-live-desktop:build-lib-deps
+
+      - name: Build desktop app (JS bundle + Windows installer)
+        run: pnpm exec nx run ledger-live-desktop:build
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: "false"
+
+      - name: Upload Windows installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: ledger-live-desktop-windows-installer
+          path: apps/ledger-live-desktop/dist/*.exe
+          if-no-files-found: error
+          retention-days: 30

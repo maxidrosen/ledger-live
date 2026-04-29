@@ -28,9 +28,23 @@ export function createMainConfig(
       },
     },
     devtool: "source-map",
+    externalsType: "commonjs2",
+    externals: {
+      // Prevent rspack from bundling the electron npm package (which returns the
+      // binary path string). Leave require('electron') as a runtime call so
+      // Electron's module system can resolve it to the actual API.
+      electron: "commonjs2 electron",
+    },
     resolve: {
       ...commonConfig.resolve,
       mainFields: ["main", "module"],
+      alias: {
+        ...commonConfig.resolve?.alias,
+        // electron-is-dev@3.0.1 crashes at init time in the rspack bundle because
+        // it calls require('electron') before Electron's app object is ready.
+        // The dev server is always dev mode, so stub it with a simple true export.
+        "electron-is-dev": path.resolve(__dirname, "./electron-is-dev-stub.js"),
+      },
     },
     plugins: [
       new rspack.DefinePlugin({

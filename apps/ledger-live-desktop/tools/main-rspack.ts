@@ -69,7 +69,10 @@ class Electron {
  */
 const startDevMode = async (argv: { port: number }) => {
   const execa = await import("execa").then(mod => mod.execa);
-  const electron = new Electron("./.webpack/main.bundle.js", execa);
+  // Pass "." so Electron resolves the app from package.json "main" field,
+  // which sets the correct app path and allows require("electron") to resolve
+  // to Electron's API instead of the npm package's path string.
+  const electron = new Electron(".", execa);
 
   try {
     await processReleaseNotes();

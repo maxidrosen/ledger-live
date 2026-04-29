@@ -339,6 +339,9 @@ async function init() {
       store.dispatch(resetDevices());
     },
   };
+
+  const { injectPresetAccounts } = await import("./mockData/presetAccounts");
+  injectPresetAccounts(store);
 }
 const root = rootNode ? createRoot(rootNode) : null;
 function r(Comp: React.JSX.Element) {

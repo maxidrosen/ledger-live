@@ -1,6 +1,6 @@
 import os from "os";
-import * as SentryMainModule from "@sentry/electron/main";
-import { ElectronMainOptions } from "@sentry/electron/main";
+import type * as SentryMainModule from "@sentry/electron/main";
+import type { ElectronMainOptions } from "@sentry/electron/main";
 import pname from "./pname";
 import anonymizer from "./anonymizer";
 import { getOperatingSystemSupportStatus } from "~/support/os";
