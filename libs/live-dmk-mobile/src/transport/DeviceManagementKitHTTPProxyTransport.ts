@@ -1,6 +1,5 @@
 import {
   DeviceManagementKit,
-  DeviceManagementKitBuilder,
   DeviceStatus,
   SendApduEmptyResponseError,
   DeviceDisconnectedWhileSendingError,
@@ -11,27 +10,24 @@ import { DisconnectedDevice } from "@ledgerhq/errors";
 import Transport from "@ledgerhq/hw-transport";
 import { firstValueFrom, type Subscription } from "rxjs";
 import { filter, timeout } from "rxjs/operators";
-import { httpProxyTransportFactory } from "./HttpProxyDmkTransport";
+import { httpProxyUrlSubject } from "./HttpProxyDmkTransport";
+import { getDeviceManagementKit } from "../hooks/useDeviceManagementKit";
 
-type DmkEntry = {
-  dmk: DeviceManagementKit;
-  sessionId?: string;
-  connectPromise?: Promise<void>;
-};
+const HTTP_PROXY_TRANSPORT_IDENTIFIER = "HTTP_PROXY_TRANSPORT";
 
 export class DeviceManagementKitHTTPProxyTransport extends Transport {
   readonly dmk: DeviceManagementKit;
   sessionId: string;
-  private readonly url: string;
   private disconnectSubscription?: Subscription;
 
-  private static readonly byUrl = new Map<string, DmkEntry>();
+  private static activeUrl: string | null = null;
+  private static activeSessionId: string | null = null;
+  private static activeConnectPromise: Promise<string> | null = null;
 
-  constructor(dmk: DeviceManagementKit, sessionId: string, url: string) {
+  constructor(dmk: DeviceManagementKit, sessionId: string) {
     super();
     this.dmk = dmk;
     this.sessionId = sessionId;
-    this.url = url;
     this.disconnectSubscription = this.listenToDisconnect();
   }
 
@@ -39,52 +35,41 @@ export class DeviceManagementKitHTTPProxyTransport extends Transport {
     return raw.replace(/^ws(s?):\/\//, "http$1://");
   }
 
-  private static ensureEntry(url: string): DmkEntry {
-    let entry = this.byUrl.get(url);
-    if (!entry) {
-      const dmk = new DeviceManagementKitBuilder()
-        .addTransport(httpProxyTransportFactory(url))
-        .build();
-      entry = { dmk };
-      this.byUrl.set(url, entry);
-    }
-    return entry;
-  }
+  private static async ensureSession(dmk: DeviceManagementKit, url: string): Promise<string> {
+    if (this.activeSessionId && this.activeUrl === url) return this.activeSessionId;
+    if (this.activeConnectPromise) return this.activeConnectPromise;
 
-  private static async ensureSession(entry: DmkEntry): Promise<void> {
-    if (entry.sessionId) return;
-    if (entry.connectPromise) return entry.connectPromise;
-
-    entry.connectPromise = (async () => {
+    this.activeConnectPromise = (async () => {
       const devices = await firstValueFrom<DiscoveredDevice[]>(
-        entry.dmk.listenToAvailableDevices({}).pipe(
+        dmk.listenToAvailableDevices({ transport: HTTP_PROXY_TRANSPORT_IDENTIFIER }).pipe(
           filter(list => list.length > 0),
           timeout(10_000),
         ),
       );
-      entry.sessionId = await entry.dmk.connect({
+      const sessionId = await dmk.connect({
         device: devices[0],
         sessionRefresherOptions: { isRefresherDisabled: true },
       });
+      this.activeSessionId = sessionId;
+      this.activeUrl = url;
+      return sessionId;
     })();
 
     try {
-      await entry.connectPromise;
+      return await this.activeConnectPromise;
     } finally {
-      entry.connectPromise = undefined;
+      this.activeConnectPromise = null;
     }
   }
 
   static async open(rawUrl: string): Promise<DeviceManagementKitHTTPProxyTransport> {
     const url = this.normalizeUrl(rawUrl);
-    const entry = this.ensureEntry(url);
-    await this.ensureSession(entry);
+    const dmk = getDeviceManagementKit();
 
-    if (!entry.sessionId) {
-      throw new Error(`Failed to establish DMK session with HTTP proxy at ${url}`);
-    }
+    httpProxyUrlSubject.next(url);
+    const sessionId = await this.ensureSession(dmk, url);
 
-    return new DeviceManagementKitHTTPProxyTransport(entry.dmk, entry.sessionId, url);
+    return new DeviceManagementKitHTTPProxyTransport(dmk, sessionId);
   }
 
   async exchange(
@@ -122,8 +107,8 @@ export class DeviceManagementKitHTTPProxyTransport extends Transport {
     const handleDisconnect = () => {
       if (isDisconnected) return;
       isDisconnected = true;
-      const entry = DeviceManagementKitHTTPProxyTransport.byUrl.get(this.url);
-      if (entry) entry.sessionId = undefined;
+      DeviceManagementKitHTTPProxyTransport.activeSessionId = null;
+      DeviceManagementKitHTTPProxyTransport.activeUrl = null;
       this.emit("disconnect");
       subscription?.unsubscribe();
     };

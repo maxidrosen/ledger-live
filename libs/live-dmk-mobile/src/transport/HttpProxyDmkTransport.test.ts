@@ -1,7 +1,9 @@
+import { BehaviorSubject } from "rxjs";
 import { ApduResponse, DeviceModelId, type TransportArgs } from "@ledgerhq/device-management-kit";
 import { HttpProxyDmkTransport } from "./HttpProxyDmkTransport";
 
 const HTTP_PROXY_TRANSPORT_IDENTIFIER = "HTTP_PROXY_TRANSPORT";
+const SYNTHETIC_DEVICE_ID = "http-proxy-device";
 
 const mockDeviceModel = {
   model: DeviceModelId.NANO_X,
@@ -20,11 +22,13 @@ function createMockArgs(): TransportArgs {
 describe("HttpProxyDmkTransport", () => {
   const url = "http://localhost:8435";
   let originalFetch: typeof global.fetch;
+  let urlSubject: BehaviorSubject<string | null>;
 
   beforeEach(() => {
     originalFetch = global.fetch;
     jest.restoreAllMocks();
     global.fetch = jest.fn();
+    urlSubject = new BehaviorSubject<string | null>(url);
   });
 
   afterEach(() => {
@@ -33,69 +37,90 @@ describe("HttpProxyDmkTransport", () => {
 
   describe("getIdentifier", () => {
     it("should return the HTTP proxy transport identifier", () => {
-      const transport = new HttpProxyDmkTransport(createMockArgs(), url);
+      const transport = new HttpProxyDmkTransport(createMockArgs(), urlSubject);
       expect(transport.getIdentifier()).toBe(HTTP_PROXY_TRANSPORT_IDENTIFIER);
     });
   });
 
   describe("isSupported", () => {
     it("should always return true", () => {
-      const transport = new HttpProxyDmkTransport(createMockArgs(), url);
+      const transport = new HttpProxyDmkTransport(createMockArgs(), urlSubject);
       expect(transport.isSupported()).toBe(true);
     });
   });
 
   describe("listenToAvailableDevices", () => {
-    it("should emit a list containing the synthetic device", () => {
-      const transport = new HttpProxyDmkTransport(createMockArgs(), url);
+    it("should emit the synthetic device when a URL is set", () => {
+      const transport = new HttpProxyDmkTransport(createMockArgs(), urlSubject);
       const emitted: unknown[][] = [];
 
       transport.listenToAvailableDevices().subscribe({ next: list => emitted.push(list) });
 
       expect(emitted).toHaveLength(1);
       expect(emitted[0]).toHaveLength(1);
-      expect((emitted[0][0] as { id: string }).id).toBe(url);
+      expect((emitted[0][0] as { id: string }).id).toBe(SYNTHETIC_DEVICE_ID);
     });
 
-    it("should complete after emitting the synthetic device", () => {
-      const transport = new HttpProxyDmkTransport(createMockArgs(), url);
-      let completed = false;
+    it("should emit an empty list when the URL is null", () => {
+      urlSubject.next(null);
+      const transport = new HttpProxyDmkTransport(createMockArgs(), urlSubject);
+      const emitted: unknown[][] = [];
 
-      transport.listenToAvailableDevices().subscribe({
-        complete: () => {
-          completed = true;
-        },
-      });
+      transport.listenToAvailableDevices().subscribe({ next: list => emitted.push(list) });
 
-      expect(completed).toBe(true);
+      expect(emitted).toHaveLength(1);
+      expect(emitted[0]).toHaveLength(0);
+    });
+
+    it("should re-emit when the URL subject changes", () => {
+      urlSubject.next(null);
+      const transport = new HttpProxyDmkTransport(createMockArgs(), urlSubject);
+      const emitted: unknown[][] = [];
+
+      transport.listenToAvailableDevices().subscribe({ next: list => emitted.push(list) });
+      urlSubject.next("http://other:9999");
+
+      expect(emitted).toHaveLength(2);
+      expect(emitted[1]).toHaveLength(1);
+      expect((emitted[1][0] as { name: string }).name).toContain("http://other:9999");
     });
   });
 
   describe("startDiscovering", () => {
-    it("should emit the synthetic device", () => {
-      const transport = new HttpProxyDmkTransport(createMockArgs(), url);
+    it("should emit the synthetic device when a URL is set", () => {
+      const transport = new HttpProxyDmkTransport(createMockArgs(), urlSubject);
       const discovered: unknown[] = [];
 
       transport.startDiscovering().subscribe({ next: d => discovered.push(d) });
 
       expect(discovered).toHaveLength(1);
-      expect((discovered[0] as { id: string }).id).toBe(url);
+      expect((discovered[0] as { id: string }).id).toBe(SYNTHETIC_DEVICE_ID);
       expect((discovered[0] as { transport: string }).transport).toBe(
         HTTP_PROXY_TRANSPORT_IDENTIFIER,
       );
+    });
+
+    it("should emit nothing when the URL is null", () => {
+      urlSubject.next(null);
+      const transport = new HttpProxyDmkTransport(createMockArgs(), urlSubject);
+      const discovered: unknown[] = [];
+
+      transport.startDiscovering().subscribe({ next: d => discovered.push(d) });
+
+      expect(discovered).toHaveLength(0);
     });
   });
 
   describe("stopDiscovering", () => {
     it("should not throw", () => {
-      const transport = new HttpProxyDmkTransport(createMockArgs(), url);
+      const transport = new HttpProxyDmkTransport(createMockArgs(), urlSubject);
       expect(() => transport.stopDiscovering()).not.toThrow();
     });
   });
 
   describe("disconnect", () => {
     it("should return Right(undefined)", async () => {
-      const transport = new HttpProxyDmkTransport(createMockArgs(), url);
+      const transport = new HttpProxyDmkTransport(createMockArgs(), urlSubject);
       const result = await transport.disconnect();
       expect(result.isRight()).toBe(true);
       expect(result.unsafeCoerce()).toBeUndefined();
@@ -104,19 +129,25 @@ describe("HttpProxyDmkTransport", () => {
 
   describe("connect", () => {
     it("should return Right with a TransportConnectedDevice", async () => {
-      const transport = new HttpProxyDmkTransport(createMockArgs(), url);
-      const result = await transport.connect({ deviceId: url, onDisconnect: jest.fn() });
+      const transport = new HttpProxyDmkTransport(createMockArgs(), urlSubject);
+      const result = await transport.connect({
+        deviceId: SYNTHETIC_DEVICE_ID,
+        onDisconnect: jest.fn(),
+      });
       expect(result.isRight()).toBe(true);
     });
 
     describe("sendApdu", () => {
-      async function getSendApdu(urlOverride = url) {
-        const transport = new HttpProxyDmkTransport(createMockArgs(), urlOverride);
-        const result = await transport.connect({ deviceId: urlOverride, onDisconnect: jest.fn() });
+      async function getSendApdu(subject = urlSubject) {
+        const transport = new HttpProxyDmkTransport(createMockArgs(), subject);
+        const result = await transport.connect({
+          deviceId: SYNTHETIC_DEVICE_ID,
+          onDisconnect: jest.fn(),
+        });
         return result.unsafeCoerce().sendApdu;
       }
 
-      it("should POST the APDU as hex to the proxy URL", async () => {
+      it("should POST the APDU as hex to the current URL", async () => {
         const sendApdu = await getSendApdu();
         (global.fetch as jest.Mock).mockResolvedValueOnce({
           ok: true,
@@ -132,6 +163,29 @@ describe("HttpProxyDmkTransport", () => {
             body: JSON.stringify({ apduHex: "b001000000" }),
           }),
         );
+      });
+
+      it("should POST to the new URL when the subject emits a new value", async () => {
+        const sendApdu = await getSendApdu();
+        (global.fetch as jest.Mock).mockResolvedValue({
+          ok: true,
+          json: async () => ({ data: "9000" }),
+        });
+
+        urlSubject.next("http://new-host:1234");
+        await sendApdu(Uint8Array.from([0x00]));
+
+        expect(global.fetch).toHaveBeenCalledWith("http://new-host:1234", expect.anything());
+      });
+
+      it("should return Left when the URL subject value is null", async () => {
+        const sendApdu = await getSendApdu();
+        urlSubject.next(null);
+
+        const result = await sendApdu(Uint8Array.from([0x00]));
+
+        expect(result.isLeft()).toBe(true);
+        expect(global.fetch).not.toHaveBeenCalled();
       });
 
       it("should return Right(ApduResponse) with data and statusCode split correctly", async () => {
@@ -207,9 +261,12 @@ describe("HttpProxyDmkTransport", () => {
       });
 
       it("should return Left and NOT call onDisconnect when fetch throws", async () => {
-        const transport = new HttpProxyDmkTransport(createMockArgs(), url);
+        const transport = new HttpProxyDmkTransport(createMockArgs(), urlSubject);
         const onDisconnect = jest.fn();
-        const connectResult = await transport.connect({ deviceId: url, onDisconnect });
+        const connectResult = await transport.connect({
+          deviceId: SYNTHETIC_DEVICE_ID,
+          onDisconnect,
+        });
         const sendApdu = connectResult.unsafeCoerce().sendApdu;
 
         (global.fetch as jest.Mock).mockRejectedValueOnce(new Error("Network error"));
@@ -225,7 +282,7 @@ describe("HttpProxyDmkTransport", () => {
   describe("syntheticDevice", () => {
     it("should pass the custom deviceModelId to deviceModelDataSource.getDeviceModel", () => {
       const args = createMockArgs();
-      const transport = new HttpProxyDmkTransport(args, url, DeviceModelId.FLEX);
+      const transport = new HttpProxyDmkTransport(args, urlSubject, DeviceModelId.FLEX);
 
       transport.listenToAvailableDevices().subscribe({ next: () => {} });
 
@@ -236,7 +293,7 @@ describe("HttpProxyDmkTransport", () => {
 
     it("should default to NANO_X when no deviceModelId is provided", () => {
       const args = createMockArgs();
-      const transport = new HttpProxyDmkTransport(args, url);
+      const transport = new HttpProxyDmkTransport(args, urlSubject);
 
       transport.listenToAvailableDevices().subscribe({ next: () => {} });
 
@@ -246,12 +303,24 @@ describe("HttpProxyDmkTransport", () => {
     });
 
     it("should include the URL in the device name", () => {
-      const transport = new HttpProxyDmkTransport(createMockArgs(), url);
+      const transport = new HttpProxyDmkTransport(createMockArgs(), urlSubject);
       const emitted: unknown[][] = [];
 
       transport.listenToAvailableDevices().subscribe({ next: list => emitted.push(list) });
 
       expect((emitted[0][0] as { name: string }).name).toContain(url);
+    });
+
+    it("should use a stable id across URL changes", () => {
+      const transport = new HttpProxyDmkTransport(createMockArgs(), urlSubject);
+      const ids: string[] = [];
+
+      transport.listenToAvailableDevices().subscribe({
+        next: list => list.forEach(d => ids.push((d as { id: string }).id)),
+      });
+      urlSubject.next("http://other:9999");
+
+      expect(ids).toEqual([SYNTHETIC_DEVICE_ID, SYNTHETIC_DEVICE_ID]);
     });
   });
 });

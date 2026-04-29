@@ -1,4 +1,5 @@
-import { Observable, of } from "rxjs";
+import { BehaviorSubject, EMPTY, Observable, of } from "rxjs";
+import { map } from "rxjs/operators";
 import { Either, Left, Right } from "purify-ts";
 import {
   ApduResponse,
@@ -16,19 +17,22 @@ import {
 } from "@ledgerhq/device-management-kit";
 
 const HTTP_PROXY_TRANSPORT_IDENTIFIER = "HTTP_PROXY_TRANSPORT";
+const SYNTHETIC_DEVICE_ID = "http-proxy-device";
+
+export const httpProxyUrlSubject = new BehaviorSubject<string | null>(null);
 
 export class HttpProxyDmkTransport implements DmkTransport {
-  private readonly url: string;
+  private readonly urlSubject: BehaviorSubject<string | null>;
   private readonly deviceModelId: DeviceModelId;
   private readonly args: TransportArgs;
 
   constructor(
     args: TransportArgs,
-    url: string,
+    urlSubject: BehaviorSubject<string | null>,
     deviceModelId: DeviceModelId = DeviceModelId.NANO_X,
   ) {
     this.args = args;
-    this.url = url;
+    this.urlSubject = urlSubject;
     this.deviceModelId = deviceModelId;
   }
 
@@ -41,15 +45,16 @@ export class HttpProxyDmkTransport implements DmkTransport {
   }
 
   listenToAvailableDevices(): Observable<TransportDiscoveredDevice[]> {
-    return of([this.syntheticDevice()]);
+    return this.urlSubject.pipe(map(url => (url ? [this.syntheticDevice(url)] : [])));
   }
 
   startDiscovering(): Observable<TransportDiscoveredDevice> {
-    return of(this.syntheticDevice());
+    const url = this.urlSubject.getValue();
+    return url ? of(this.syntheticDevice(url)) : EMPTY;
   }
 
   stopDiscovering(): void {
-    // No-op — the synthetic device is always available, nothing to tear down.
+    // Nothing to clean up.
   }
 
   async connect({
@@ -58,9 +63,11 @@ export class HttpProxyDmkTransport implements DmkTransport {
     deviceId: string;
     onDisconnect: (deviceId: string) => void;
   }): Promise<Either<ConnectError, TransportConnectedDevice>> {
-    const url = this.url;
-
     const sendApdu = async (apdu: Uint8Array): Promise<Either<DmkError, ApduResponse>> => {
+      const url = this.urlSubject.getValue();
+      if (!url) {
+        return Left(new UnknownDeviceError("HTTP proxy URL not set"));
+      }
       try {
         const apduHex = bufferToHexaString(apdu, false);
         const resp = await fetch(url, {
@@ -92,7 +99,6 @@ export class HttpProxyDmkTransport implements DmkTransport {
         if (!bytes) {
           return Left(new UnknownDeviceError(`invalid hex in proxy response: ${body.data}`));
         }
-        // APDU response must include the 2-byte status code.
         if (bytes.length < 2) {
           return Left(new UnknownDeviceError(`malformed proxy response: ${body.data}`));
         }
@@ -125,17 +131,17 @@ export class HttpProxyDmkTransport implements DmkTransport {
     return Right(undefined);
   }
 
-  private syntheticDevice(): TransportDiscoveredDevice {
+  private syntheticDevice(url: string): TransportDiscoveredDevice {
     return {
-      id: this.url,
+      id: SYNTHETIC_DEVICE_ID,
       deviceModel: this.args.deviceModelDataSource.getDeviceModel({ id: this.deviceModelId }),
       transport: HTTP_PROXY_TRANSPORT_IDENTIFIER,
-      name: `HTTP Proxy (${this.url})`,
+      name: `HTTP Proxy (${url})`,
     };
   }
 }
 
 export const httpProxyTransportFactory =
-  (url: string, deviceModelId?: DeviceModelId): TransportFactory =>
+  (urlSubject: BehaviorSubject<string | null>, deviceModelId?: DeviceModelId): TransportFactory =>
   (args: TransportArgs) =>
-    new HttpProxyDmkTransport(args, url, deviceModelId);
+    new HttpProxyDmkTransport(args, urlSubject, deviceModelId);
