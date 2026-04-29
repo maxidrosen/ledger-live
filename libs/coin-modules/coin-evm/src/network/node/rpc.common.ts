@@ -101,7 +101,7 @@ function makeErc20Transfer(log: LogWithAddress, from: string, to: string): ERC20
  * - topic[1]: src address (indexed, padded to 32 bytes)
  * - data: wad (uint256, 32 bytes)
  * - log.address: token contract address
- * 
+ *
  *  Other standards (not supported yet):
  * - ERC721:  4 topics (sig, from, to, tokenId) - filtered out by topics.length === 3
  * - ERC1155: different event signature - filtered out by topic[0] check
@@ -110,19 +110,18 @@ function makeErc20Transfer(log: LogWithAddress, from: string, to: string): ERC20
  * @returns Array of parsed ERC20 transfers
  */
 export function parseERC20TransfersFromLogs(logs: ReadonlyArray<LogWithAddress>): ERC20Transfer[] {
-  return logs
-    .flatMap(log => {
-      if (isTransfer(log)) {
-        return [makeErc20Transfer(log, topicToAddress(log.topics[1]), topicToAddress(log.topics[2]))];
-      }
-      if (isWethDeposit(log)) {
-        return [makeErc20Transfer(log, ZERO_ADDRESS_HEX, topicToAddress(log.topics[1]))];
-      }
-      if (isWethWithdrawal(log)) {
-        return [makeErc20Transfer(log, topicToAddress(log.topics[1]), ZERO_ADDRESS_HEX)];
-      }
-      return [];
-    });
+  return logs.flatMap(log => {
+    if (isTransfer(log)) {
+      return [makeErc20Transfer(log, topicToAddress(log.topics[1]), topicToAddress(log.topics[2]))];
+    }
+    if (isWethDeposit(log)) {
+      return [makeErc20Transfer(log, ZERO_ADDRESS_HEX, topicToAddress(log.topics[1]))];
+    }
+    if (isWethWithdrawal(log)) {
+      return [makeErc20Transfer(log, topicToAddress(log.topics[1]), ZERO_ADDRESS_HEX)];
+    }
+    return [];
+  });
 }
 
 export const RPC_TIMEOUT =
@@ -142,6 +141,20 @@ export const DEFAULT_RETRIES_RPC_METHODS =
  * Keyed by currency id + RPC URI so the same chain with different uri gets distinct providers.
  */
 const PROVIDERS_BY_RPC: Record<string, JsonRpcProvider> = {};
+
+/**
+ * Destroys all cached RPC providers and clears the cache.
+ * Intended for use in test teardown (afterAll) to stop background polling
+ * and let Jest exit cleanly.
+ */
+export function destroyAllProviders(): void {
+  for (const provider of Object.values(PROVIDERS_BY_RPC)) {
+    provider.destroy();
+  }
+  for (const key of Object.keys(PROVIDERS_BY_RPC)) {
+    delete PROVIDERS_BY_RPC[key];
+  }
+}
 
 function providerCacheKey(currencyId: string, uri: string): string {
   return `${currencyId}:${uri}`;
@@ -205,11 +218,9 @@ async function getTransaction(
     from: tx.from,
     to: tx.to ?? undefined,
     ...(tx.data !== null && tx.data !== undefined && isSmartContractInput(tx.data)
-        ? { input: tx.data }
-        : {}),
-    ...(receipt.contractAddress
-      ? { contractAddress: receipt.contractAddress }
+      ? { input: tx.data }
       : {}),
+    ...(receipt.contractAddress ? { contractAddress: receipt.contractAddress } : {}),
     erc20Transfers: parseERC20TransfersFromLogs(receipt.logs),
   };
 }
@@ -439,8 +450,8 @@ async function getBlockByHeight(
       from: tx.from,
       to: tx.to ?? undefined,
       ...(rawTx.data !== null && rawTx.data !== undefined && isSmartContractInput(rawTx.data)
-          ? { input: rawTx.data }
-          : {}),
+        ? { input: rawTx.data }
+        : {}),
     };
   });
 
@@ -549,9 +560,7 @@ async function getBlockByHeightFromRawRpc(
             value: BigInt(tx.value ?? "0x0").toString(),
             from: tx.from,
             to: tx.to ?? undefined,
-            ...("input" in tx &&
-            typeof tx.input === "string" &&
-            isSmartContractInput(tx.input)
+            ...("input" in tx && typeof tx.input === "string" && isSmartContractInput(tx.input)
               ? { input: tx.input }
               : {}),
           };
